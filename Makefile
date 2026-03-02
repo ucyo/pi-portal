@@ -36,10 +36,10 @@ start:
 	$(UV) run honcho start
 
 start-web:
-	$(UV) run uvicorn backend.main:app --reload --port 8000
+	$(UV) run uvicorn backend.main:app --reload --port 8000 --host 0.0.0.0
 
 start-mlflow:
-	$(UV) run mlflow server --host 127.0.0.1 --port 5000
+	$(UV) run mlflow server --host 127.0.0.1 --port 5000  --host 0.0.0.0
 
 # Testing & Quality
 test:

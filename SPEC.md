@@ -57,9 +57,9 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 #### M0.4 - Basic FastAPI app
 - [x] Create `backend/main.py` with FastAPI app
 - [x] Add health check endpoint (`GET /health`)
-- [ ] Configure static file serving for `frontend/` folder
-- [ ] Add CORS configuration (for local development)
-- [ ] Test server starts and serves static files
+- [x] Configure static file serving for `frontend/` folder
+- [x] Add CORS configuration (for local development)
+- [x] Test server starts and serves static files
 
 #### M0.5 - Verify Pi RPC communication
 - [ ] Create `backend/pi_client.py` module for Pi communication

@@ -1,4 +1,4 @@
-.PHONY: help install dev test fmt check start start-web start-mlflow clean
+.PHONY: help install dev test test-integ test-all fmt check start start-web start-mlflow clean
 
 # Use uv from PATH or home directory
 UV := $(shell command -v uv 2>/dev/null || echo "$(HOME)/.local/bin/uv")
@@ -17,9 +17,11 @@ help:
 	@echo "  start-mlflow Start only MLflow server"
 	@echo ""
 	@echo "Testing & Quality:"
-	@echo "  test        Run all tests (verbose)"
+	@echo "  test        Run unit tests (verbose)"
+	@echo "  test-integ  Run integration tests (require Pi)"
+	@echo "  test-all    Run all tests"
 	@echo "  fmt         Format and lint code (ruff)"
-	@echo "  check       Run tests + fmt"
+	@echo "  check       Run unit tests + fmt"
 	@echo ""
 	@echo "Maintenance:"
 	@echo "  clean       Remove generated files"
@@ -43,6 +45,12 @@ start-mlflow:
 
 # Testing & Quality
 test:
+	$(UV) run pytest -v -m "not integration"
+
+test-integ:
+	$(UV) run pytest -v -m "integration"
+
+test-all:
 	$(UV) run pytest -v
 
 fmt:

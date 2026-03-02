@@ -62,13 +62,13 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 - [x] Test server starts and serves static files
 
 #### M0.5 - Verify Pi RPC communication
-- [ ] Create `backend/pi_client.py` module for Pi communication
-- [ ] Implement subprocess spawn for `pi --mode rpc` (with session saving enabled)
-- [ ] Configure Pi session directory (e.g., `data/pi_sessions/`)
-- [ ] Send test prompt via JSON-RPC
-- [ ] Receive and parse response
-- [ ] Handle subprocess lifecycle (start/stop)
-- [ ] Add basic error handling for Pi crashes
+- [x] Create `backend/pi_client.py` module for Pi communication
+- [x] Implement subprocess spawn for `pi --mode rpc` (with session saving enabled)
+- [x] Configure Pi session directory (e.g., `data/pi_sessions/`)
+- [x] Send test prompt via JSON-RPC
+- [x] Receive and parse response
+- [x] Handle subprocess lifecycle (start/stop)
+- [x] Add basic error handling for Pi crashes
 
 ---
 

@@ -95,6 +95,8 @@ make start
 
 ## Git Workflow
 
+**IMPORTANT: Never make commits without explicit user approval.** Always ask the user before committing changes.
+
 ### Changelog
 
 Update `CHANGELOG.md` before committing notable changes:

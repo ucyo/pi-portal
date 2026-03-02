@@ -287,9 +287,7 @@ function attachStarterPromptHandlers() {
         btn.addEventListener('click', () => {
             const prompt = btn.dataset.prompt;
             if (prompt) {
-                elements.chatInput.value = prompt;
-                updateSendButton();
-                elements.chatInput.focus();
+                sendMessage(prompt);
             }
         });
     });

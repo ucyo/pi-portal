@@ -26,20 +26,39 @@ git clone <repository-url>
 cd pi-portal
 
 # Install dependencies
-uv sync
+make install
 
 # Start all services
-honcho start
+make start
 ```
 
 ### Development
 
 ```bash
-# Start all services (FastAPI, MLflow, Pi)
-honcho start
+# See all available commands
+make help
 
-# Or start backend only
-uv run uvicorn backend.main:app --reload
+# Start all services (FastAPI, MLflow, Pi)
+make start
+
+# Start only the web server
+make start-web
+
+# Start only MLflow
+make start-mlflow
+```
+
+### Testing
+
+```bash
+# Run all tests
+make test
+
+# Run tests + format/lint
+make check
+
+# Format and lint code
+make fmt
 ```
 
 ## Architecture

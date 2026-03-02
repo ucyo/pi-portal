@@ -46,13 +46,13 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 - [x] Document Python version requirement in `pyproject.toml`
 
 #### M0.3 - Set up Honcho
-- [ ] Install Honcho (`uv add honcho --dev`)
-- [ ] Create `Procfile` with entries for:
+- [x] Install Honcho (`uv add honcho --dev`)
+- [x] Create `Procfile` with entries for:
   - FastAPI (uvicorn)
   - MLflow server
   - Pi (RPC mode)
-- [ ] Test `honcho start` runs all processes
-- [ ] Document Honcho usage in README
+- [x] Test `honcho start` runs all processes
+- [x] Document Honcho usage in README
 
 #### M0.4 - Basic FastAPI app
 - [ ] Create `backend/main.py` with FastAPI app

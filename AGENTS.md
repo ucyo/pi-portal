@@ -4,11 +4,21 @@ You are building **pi-portal**, a web-based chat interface for the Pi coding age
 
 ## Build System
 
-Use Honcho for development:
-- `honcho start` - start all services (FastAPI, MLflow, Pi)
-- `uv run uvicorn backend.main:app --reload` - start backend only
+Use `make` for common tasks (run `make help` for all options):
+
+```bash
+make install     # Install dependencies
+make start       # Start all services (web, mlflow, pi)
+make start-web   # Start only the web server
+make test        # Run all tests
+make fmt         # Format and lint code (ruff)
+make check       # Run tests + fmt
+make clean       # Remove generated files
+```
+
+For adding dependencies:
 - `uv add <package>` - add a dependency
-- `uv sync` - install dependencies
+- `uv add --dev <package>` - add a dev dependency
 
 ## Before Starting Work
 
@@ -49,7 +59,19 @@ Use Honcho for development:
 
 ### Testing Approach
 
-**Manual testing** is primary for this project:
+**Automated tests** with pytest:
+```bash
+make test              # Run all tests
+make test-v            # Verbose output
+make check             # Run tests + lint
+```
+
+**When adding new features:**
+- Add tests for new endpoints in `tests/test_*.py`
+- Use the `client` fixture from `conftest.py` for async HTTP tests
+- Run `make check` before marking milestone complete
+
+**Manual testing** for UI and integration:
 - Test each feature in the browser after implementation
 - Test WebSocket connection and reconnection
 - Test Pi communication end-to-end
@@ -61,11 +83,14 @@ Use Honcho for development:
 
 Before finishing a session:
 ```bash
-# Verify server starts
-uv run uvicorn backend.main:app --reload
+# Run tests and linter
+make check
 
-# Check Honcho runs all services
-honcho start
+# Verify server starts
+make start-web
+
+# Check all services run together
+make start
 ```
 
 ## Pacing and Natural Stop Points
@@ -124,6 +149,7 @@ Example:
 | `PROGRESS.md` | Current progress and status |
 | `AGENTS.md` | This file - agent instructions |
 | `README.md` | User-facing documentation |
+| `Makefile` | Build commands (`make help` for options) |
 | `Procfile` | Honcho process definitions |
 | `pyproject.toml` | Python project config (uv) |
 
@@ -142,6 +168,11 @@ pi-portal/
 │   ├── index.html        # Main HTML page
 │   ├── styles.css        # Styling
 │   └── app.js            # Client-side logic
+├── tests/
+│   ├── conftest.py       # Pytest fixtures
+│   ├── test_app.py       # App configuration tests
+│   ├── test_health.py    # Health endpoint tests
+│   └── test_procfile.py  # Procfile tests
 ├── data/
 │   ├── app.db            # SQLite database (generated)
 │   └── pi_sessions/      # Pi's JSONL sessions
@@ -218,7 +249,8 @@ with mlflow.start_span(name="user_prompt") as span:
 Before marking a milestone complete:
 
 - [ ] All tasks in SPEC.md checked off
-- [ ] Server starts without errors
+- [ ] All checks pass (`make check`)
+- [ ] Server starts without errors (`make start-web`)
 - [ ] Manual testing done in browser
 - [ ] WebSocket connection works
 - [ ] Data persists correctly

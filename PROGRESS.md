@@ -4,6 +4,7 @@
 
 - [x] M0.1: completed - project structure initialized
 - [x] M0.2: completed - Python environment set up
+- [x] M0.3: completed - Honcho setup with Procfile
 
 ## Notes
 - uv installed (v0.10.7)

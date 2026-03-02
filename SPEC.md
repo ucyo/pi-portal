@@ -29,21 +29,21 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 ### M0 - Project Setup
 
 #### M0.1 - Initialize project structure
-- [ ] Create project root folder
-- [ ] Create `backend/` folder for FastAPI code
-- [ ] Create `frontend/` folder for HTML/CSS/JS
-- [ ] Create `README.md` with project overview
-- [ ] Create `.gitignore` (Python, SQLite, environment files)
-- [ ] Initialize git repository
+- [x] Create project root folder
+- [x] Create `backend/` folder for FastAPI code
+- [x] Create `frontend/` folder for HTML/CSS/JS
+- [x] Create `README.md` with project overview
+- [x] Create `.gitignore` (Python, SQLite, environment files)
+- [x] Initialize git repository
 
 #### M0.2 - Set up Python environment
-- [ ] Initialize project with `uv init`
-- [ ] Add FastAPI dependency with `uv add`
-- [ ] Add uvicorn dependency
-- [ ] Add aiosqlite dependency (async SQLite)
-- [ ] Add MLflow client dependency
-- [ ] Add websockets dependency
-- [ ] Document Python version requirement in `pyproject.toml`
+- [x] Initialize project with `uv init`
+- [x] Add FastAPI dependency with `uv add`
+- [x] Add uvicorn dependency
+- [x] Add aiosqlite dependency (async SQLite)
+- [x] Add MLflow client dependency
+- [x] Add websockets dependency
+- [x] Document Python version requirement in `pyproject.toml`
 
 #### M0.3 - Set up Honcho
 - [ ] Install Honcho (`uv add honcho --dev`)

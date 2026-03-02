@@ -55,8 +55,8 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 - [x] Document Honcho usage in README
 
 #### M0.4 - Basic FastAPI app
-- [ ] Create `backend/main.py` with FastAPI app
-- [ ] Add health check endpoint (`GET /health`)
+- [x] Create `backend/main.py` with FastAPI app
+- [x] Add health check endpoint (`GET /health`)
 - [ ] Configure static file serving for `frontend/` folder
 - [ ] Add CORS configuration (for local development)
 - [ ] Test server starts and serves static files

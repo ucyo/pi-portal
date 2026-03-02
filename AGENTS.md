@@ -93,6 +93,45 @@ make start-web
 make start
 ```
 
+## Git Workflow
+
+### Changelog
+
+Update `CHANGELOG.md` before committing notable changes:
+
+- Add entries to the `## Unreleased` section
+- Focus on user-facing changes (features, fixes, breaking changes)
+- Start each entry with a past-tense verb
+- Keep entries concise but descriptive
+- Ignore insignificant changes (typos, internal refactoring)
+
+Example:
+```markdown
+## Unreleased
+
+* Added WebSocket support for real-time chat
+* Fixed session persistence when browser refreshes
+```
+
+### Commit Messages
+
+Use Conventional Commits format:
+
+```
+<type>(<scope>): <summary>
+```
+
+- **type**: `feat`, `fix`, `docs`, `refactor`, `chore`, `test`, `perf`
+- **scope**: optional, short noun for affected area (e.g., `api`, `ui`, `setup`)
+- **summary**: imperative mood, <= 72 chars, no trailing period
+
+Examples:
+```
+feat(chat): add WebSocket message streaming
+fix(db): resolve session persistence on reconnect
+docs: update README with deployment instructions
+```
+
 ## Pacing and Natural Stop Points
 
 **Important:** Do NOT blindly continue through the entire execution plan in one session.
@@ -147,6 +186,7 @@ Example:
 |------|---------|
 | `SPEC.md` | Full specification with milestones and tasks |
 | `PROGRESS.md` | Current progress and status |
+| `CHANGELOG.md` | Notable changes (update before commits) |
 | `AGENTS.md` | This file - agent instructions |
 | `README.md` | User-facing documentation |
 | `Makefile` | Build commands (`make help` for options) |

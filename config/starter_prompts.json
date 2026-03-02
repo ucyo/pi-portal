@@ -1,0 +1,20 @@
+{
+  "prompts": [
+    {
+      "icon": "📁",
+      "text": "What files are in the current directory?"
+    },
+    {
+      "icon": "🏗️",
+      "text": "Explain the structure of this project"
+    },
+    {
+      "icon": "🐍",
+      "text": "Help me write a Python function to parse JSON"
+    },
+    {
+      "icon": "💡",
+      "text": "What can you help me with?"
+    }
+  ]
+}

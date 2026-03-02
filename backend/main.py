@@ -1,5 +1,6 @@
 """Pi Portal - FastAPI backend."""
 
+import json
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -7,6 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Pi Portal")
+
+# Paths
+ROOT_PATH = Path(__file__).parent.parent
+CONFIG_PATH = ROOT_PATH / "config"
+FRONTEND_PATH = ROOT_PATH / "frontend"
 
 # CORS configuration for local development
 app.add_middleware(
@@ -24,6 +30,18 @@ async def health_check():
     return {"status": "ok"}
 
 
+@app.get("/api/config/starter-prompts")
+async def get_starter_prompts():
+    """Get starter prompts for the welcome screen."""
+    prompts_file = CONFIG_PATH / "starter_prompts.json"
+
+    if prompts_file.exists():
+        with open(prompts_file) as f:
+            return json.load(f)
+
+    # Default prompts if config file doesn't exist
+    return {"prompts": [{"icon": "💡", "text": "What can you help me with?"}]}
+
+
 # Static files - must be mounted after API routes
-frontend_path = Path(__file__).parent.parent / "frontend"
-app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+app.mount("/", StaticFiles(directory=FRONTEND_PATH, html=True), name="frontend")

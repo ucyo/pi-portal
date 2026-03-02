@@ -1,12 +1,16 @@
 # Progress
 
-## Current: M0 - Project Setup (Complete)
+## Completed: M0 - Project Setup
 
 - [x] M0.1: completed - project structure initialized
 - [x] M0.2: completed - Python environment set up
 - [x] M0.3: completed - Honcho setup with Procfile
 - [x] M0.4: completed - static files + CORS configured
 - [x] M0.5: completed - Pi RPC communication verified
+
+## Current: M1 - Basic Chat
+
+- [x] M1.1: completed - Frontend HTML/CSS structure
 
 ## Notes
 - Dependencies: fastapi, uvicorn, aiosqlite, mlflow, websockets

@@ -75,15 +75,15 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 ### M1 - Basic Chat
 
 #### M1.1 - Frontend HTML/CSS structure
-- [ ] Create `frontend/index.html` with base layout
-- [ ] Create `frontend/styles.css` with chat styling
-- [ ] Implement sidebar layout (left panel)
-- [ ] Implement main chat area (right panel)
-- [ ] Add message input field and send button
-- [ ] Add placeholder for session list in sidebar
-- [ ] Add starter prompt suggestions (clickable example questions)
-- [ ] Hide starter prompts once chat begins
-- [ ] Ensure responsive design basics
+- [x] Create `frontend/index.html` with base layout
+- [x] Create `frontend/styles.css` with chat styling
+- [x] Implement sidebar layout (left panel)
+- [x] Implement main chat area (right panel)
+- [x] Add message input field and send button
+- [x] Add placeholder for session list in sidebar
+- [x] Add starter prompt suggestions (clickable example questions)
+- [x] Hide starter prompts once chat begins
+- [x] Ensure responsive design basics
 
 #### M1.2 - WebSocket connection
 - [ ] Create `frontend/app.js` for client-side logic

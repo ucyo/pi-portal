@@ -12,6 +12,7 @@
 
 - [x] M1.1: completed - Frontend HTML/CSS structure
 - [x] M1.2: completed - WebSocket connection
+- [x] M1.3: completed - Pi subprocess management
 
 ## Notes
 - Dependencies: fastapi, uvicorn, aiosqlite, mlflow, websockets
@@ -19,3 +20,4 @@
 - Makefile added for common commands
 - Pi client tested: starts subprocess, sends commands, parses responses
 - WebSocket: backend/websocket.py + frontend/app.js with reconnection logic
+- M1.3: Pi lifecycle integrated into WebSocket (lazy start, crash recovery, shutdown hook)

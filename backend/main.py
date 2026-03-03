@@ -1,15 +1,46 @@
 """Pi Portal - FastAPI backend."""
 
 import json
+import logging
+import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.websocket import websocket_endpoint
+from backend.websocket import websocket_endpoint, stop_pi_client
 
-app = FastAPI(title="Pi Portal")
+# Configure logging for Docker (stdout)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    stream=sys.stdout,
+    force=True,  # Override any existing configuration
+)
+
+# Set DEBUG level for Pi communication
+logging.getLogger("backend.pi_client").setLevel(logging.DEBUG)
+logging.getLogger("backend.websocket").setLevel(logging.DEBUG)
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager for startup/shutdown."""
+    # Startup
+    logger.info("Pi Portal starting up...")
+    yield
+    # Shutdown
+    logger.info("Pi Portal shutting down...")
+    await stop_pi_client()
+    logger.info("Pi process stopped")
+
+
+app = FastAPI(title="Pi Portal", lifespan=lifespan)
 
 # Paths
 ROOT_PATH = Path(__file__).parent.parent

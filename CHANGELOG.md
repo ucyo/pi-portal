@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Added Pi subprocess integration with WebSocket for real-time chat
+* Added crash recovery with automatic Pi restart (exponential backoff)
+* Added structured logging for Pi communication (TX/RX format)
 * Added FastAPI backend with health check endpoint
 * Added static file serving and CORS support for web frontend
 * Added Honcho process management with Procfile for web, mlflow, and pi services

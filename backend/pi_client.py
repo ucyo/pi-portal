@@ -107,7 +107,7 @@ class PiClient:
         line = json.dumps(command) + "\n"
         self._process.stdin.write(line.encode())
         await self._process.stdin.drain()
-        logger.debug(f"Sent command: {command.get('type')}")
+        logger.info(f"[PI TX] {line.strip()}")
 
     async def read_events(self) -> AsyncIterator[dict[str, Any]]:
         """Read events from Pi stdout as an async iterator.
@@ -125,16 +125,22 @@ class PiClient:
             line = await self._process.stdout.readline()
             if not line:
                 # EOF - process ended
-                logger.info("Pi process stdout closed")
+                logger.info("[PI] Process stdout closed (EOF)")
+                # Check if there's stderr output
+                if self._process.stderr:
+                    stderr = await self._process.stderr.read()
+                    if stderr:
+                        logger.error(f"[PI STDERR] {stderr.decode().strip()}")
                 break
 
+            line_str = line.decode().strip()
+            logger.info(f"[PI RX] {line_str}")
+
             try:
-                event = json.loads(line.decode())
-                logger.debug(f"Received event: {event.get('type')}")
+                event = json.loads(line_str)
                 yield event
             except json.JSONDecodeError as e:
-                logger.warning(f"Failed to parse Pi output: {e}")
-                continue
+                logger.warning(f"[PI] Failed to parse output as JSON: {e}")
 
     async def prompt(
         self,

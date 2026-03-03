@@ -11,9 +11,11 @@
 ## Current: M1 - Basic Chat
 
 - [x] M1.1: completed - Frontend HTML/CSS structure
+- [x] M1.2: completed - WebSocket connection
 
 ## Notes
 - Dependencies: fastapi, uvicorn, aiosqlite, mlflow, websockets
 - Dev deps: pytest, pytest-asyncio, httpx, ruff, honcho
 - Makefile added for common commands
 - Pi client tested: starts subprocess, sends commands, parses responses
+- WebSocket: backend/websocket.py + frontend/app.js with reconnection logic

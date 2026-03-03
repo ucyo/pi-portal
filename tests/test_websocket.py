@@ -1,0 +1,500 @@
+"""Tests for WebSocket functionality."""
+
+from starlette.testclient import TestClient
+
+from backend.main import app
+from backend.websocket import ConnectionManager, manager
+
+
+class TestConnectionManager:
+    """Test the ConnectionManager class."""
+
+    def test_initial_state(self):
+        """Manager starts with no connections."""
+        mgr = ConnectionManager()
+        assert len(mgr.active_connections) == 0
+
+    def test_manager_is_singleton_instance(self):
+        """The global manager should be a ConnectionManager instance."""
+        assert isinstance(manager, ConnectionManager)
+
+    def test_disconnect_nonexistent_connection(self):
+        """Disconnecting a non-existent connection should not raise."""
+        mgr = ConnectionManager()
+
+        # Create a mock websocket-like object
+        class FakeWebSocket:
+            pass
+
+        fake_ws = FakeWebSocket()
+        # Should not raise
+        mgr.disconnect(fake_ws)
+        assert len(mgr.active_connections) == 0
+
+
+class TestWebSocketConnection:
+    """Test WebSocket connection handling."""
+
+    def test_websocket_connect(self):
+        """Test WebSocket connection and initial status message."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            # Should receive connected status message
+            data = websocket.receive_json()
+            assert data["type"] == "status"
+            assert data["status"] == "connected"
+
+    def test_websocket_connect_has_correct_structure(self):
+        """Initial status message should have exactly type and status fields."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            data = websocket.receive_json()
+            assert set(data.keys()) == {"type", "status"}
+
+    def test_multiple_connections_allowed(self):
+        """Multiple WebSocket connections should work simultaneously."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as ws1:
+            data1 = ws1.receive_json()
+            assert data1["status"] == "connected"
+
+            with client.websocket_connect("/ws") as ws2:
+                data2 = ws2.receive_json()
+                assert data2["status"] == "connected"
+
+                # Both should be able to ping
+                ws1.send_json({"type": "ping"})
+                ws2.send_json({"type": "ping"})
+
+                assert ws1.receive_json()["type"] == "pong"
+                assert ws2.receive_json()["type"] == "pong"
+
+    def test_connection_cleanup_on_close(self):
+        """Connection should be cleaned up when WebSocket closes."""
+        client = TestClient(app)
+        initial_count = len(manager.active_connections)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+            # Connection is active
+            assert len(manager.active_connections) == initial_count + 1
+
+        # After context exit, connection should be cleaned up
+        assert len(manager.active_connections) == initial_count
+
+
+class TestWebSocketPingPong:
+    """Test WebSocket ping/pong keepalive mechanism."""
+
+    def test_ping_pong_basic(self):
+        """Test basic ping/pong keepalive."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()  # Consume initial status
+
+            websocket.send_json({"type": "ping"})
+            data = websocket.receive_json()
+
+            assert data["type"] == "pong"
+
+    def test_multiple_pings(self):
+        """Multiple pings should each receive a pong."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()  # Consume initial status
+
+            for _ in range(5):
+                websocket.send_json({"type": "ping"})
+                data = websocket.receive_json()
+                assert data["type"] == "pong"
+
+    def test_ping_with_extra_fields_ignored(self):
+        """Ping with extra fields should still work."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"type": "ping", "extra": "data", "foo": 123})
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+
+class TestWebSocketMessageHandling:
+    """Test WebSocket message sending and receiving."""
+
+    def test_message_echo(self):
+        """Test sending a message and receiving response."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"type": "message", "content": "Hello, Pi!"})
+
+            # Should receive processing status
+            data = websocket.receive_json()
+            assert data["type"] == "status"
+            assert data["status"] == "processing"
+
+            # Should receive the response message
+            data = websocket.receive_json()
+            assert data["type"] == "message"
+            assert data["role"] == "assistant"
+            assert "Hello, Pi!" in data["content"]
+
+            # Should receive ready status
+            data = websocket.receive_json()
+            assert data["type"] == "status"
+            assert data["status"] == "ready"
+
+    def test_message_response_structure(self):
+        """Response message should have correct structure."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"type": "message", "content": "Test"})
+
+            websocket.receive_json()  # processing status
+            data = websocket.receive_json()  # message
+
+            assert "type" in data
+            assert "role" in data
+            assert "content" in data
+            assert data["role"] == "assistant"
+
+    def test_multiple_messages_sequential(self):
+        """Multiple messages should be processed sequentially."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            messages = ["First message", "Second message", "Third message"]
+
+            for msg in messages:
+                websocket.send_json({"type": "message", "content": msg})
+
+                # Consume all responses for this message
+                status1 = websocket.receive_json()
+                assert status1["status"] == "processing"
+
+                response = websocket.receive_json()
+                assert msg in response["content"]
+
+                status2 = websocket.receive_json()
+                assert status2["status"] == "ready"
+
+
+class TestWebSocketEdgeCases:
+    """Test edge cases and boundary conditions."""
+
+    def test_empty_content_ignored(self):
+        """Empty message content should be ignored."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"type": "message", "content": ""})
+            websocket.send_json({"type": "ping"})
+
+            # Should only receive pong
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+    def test_whitespace_only_content_ignored(self):
+        """Whitespace-only content should be ignored."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"type": "message", "content": "   \t\n  "})
+            websocket.send_json({"type": "ping"})
+
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+    def test_missing_content_field(self):
+        """Message without content field should be handled gracefully."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"type": "message"})
+            websocket.send_json({"type": "ping"})
+
+            # Should still respond to ping
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+    def test_none_content(self):
+        """Message with None content should be handled gracefully."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"type": "message", "content": None})
+            websocket.send_json({"type": "ping"})
+
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+    def test_very_long_message(self):
+        """Very long messages should be handled."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            long_content = "A" * 10000  # 10KB message
+            websocket.send_json({"type": "message", "content": long_content})
+
+            data = websocket.receive_json()
+            assert data["status"] == "processing"
+
+            data = websocket.receive_json()
+            assert data["type"] == "message"
+            assert long_content in data["content"]
+
+    def test_special_characters_in_message(self):
+        """Messages with special characters should be handled."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            special_content = "Hello! @#$%^&*() 你好 🎉 <script>alert('xss')</script>"
+            websocket.send_json({"type": "message", "content": special_content})
+
+            websocket.receive_json()  # processing
+            data = websocket.receive_json()
+
+            assert special_content in data["content"]
+
+    def test_unicode_message(self):
+        """Unicode messages should be handled correctly."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            unicode_content = "日本語テスト émojis: 🚀🎯💡 Ñoño"
+            websocket.send_json({"type": "message", "content": unicode_content})
+
+            websocket.receive_json()  # processing
+            data = websocket.receive_json()
+
+            assert unicode_content in data["content"]
+
+    def test_newlines_in_message(self):
+        """Messages with newlines should be handled."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            multiline = "Line 1\nLine 2\nLine 3"
+            websocket.send_json({"type": "message", "content": multiline})
+
+            websocket.receive_json()  # processing
+            data = websocket.receive_json()
+
+            assert multiline in data["content"]
+
+
+class TestWebSocketUnknownMessages:
+    """Test handling of unknown or malformed messages."""
+
+    def test_unknown_message_type(self):
+        """Unknown message types should not crash the connection."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"type": "unknown_type", "data": "test"})
+            websocket.send_json({"type": "ping"})
+
+            # Connection should still work
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+    def test_empty_object(self):
+        """Empty JSON object should not crash the connection."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({})
+            websocket.send_json({"type": "ping"})
+
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+    def test_missing_type_field(self):
+        """Message without type field should not crash the connection."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"content": "no type field"})
+            websocket.send_json({"type": "ping"})
+
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+    def test_type_field_not_string(self):
+        """Non-string type field should be handled gracefully."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            websocket.send_json({"type": 123})
+            websocket.send_json({"type": ["array"]})
+            websocket.send_json({"type": {"nested": "object"}})
+            websocket.send_json({"type": "ping"})
+
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+    def test_nested_json_message(self):
+        """Deeply nested JSON should be handled."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            nested = {
+                "type": "message",
+                "content": "test",
+                "metadata": {"nested": {"deep": {"value": [1, 2, 3]}}},
+            }
+            websocket.send_json(nested)
+
+            data = websocket.receive_json()
+            assert data["status"] == "processing"
+
+
+class TestWebSocketRobustness:
+    """Test WebSocket robustness and error recovery."""
+
+    def test_rapid_messages(self):
+        """Rapid message sending should be handled."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            # Send many pings rapidly
+            for _ in range(20):
+                websocket.send_json({"type": "ping"})
+
+            # Should receive all pongs
+            for _ in range(20):
+                data = websocket.receive_json()
+                assert data["type"] == "pong"
+
+    def test_interleaved_pings_and_messages(self):
+        """Pings and messages interleaved should work correctly."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            # Send ping
+            websocket.send_json({"type": "ping"})
+            assert websocket.receive_json()["type"] == "pong"
+
+            # Send message
+            websocket.send_json({"type": "message", "content": "test"})
+            assert websocket.receive_json()["status"] == "processing"
+            assert websocket.receive_json()["type"] == "message"
+            assert websocket.receive_json()["status"] == "ready"
+
+            # Send another ping
+            websocket.send_json({"type": "ping"})
+            assert websocket.receive_json()["type"] == "pong"
+
+    def test_connection_survives_bad_messages(self):
+        """Connection should survive after receiving bad messages."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            # Send various bad messages
+            bad_messages = [
+                {},
+                {"type": None},
+                {"type": ""},
+                {"type": "message"},  # Missing content
+                {"type": "message", "content": None},
+                {"type": "unknown"},
+                {"random": "data"},
+            ]
+
+            for bad_msg in bad_messages:
+                websocket.send_json(bad_msg)
+
+            # Connection should still work
+            websocket.send_json({"type": "ping"})
+            data = websocket.receive_json()
+            assert data["type"] == "pong"
+
+
+class TestWebSocketStatusTransitions:
+    """Test WebSocket status message transitions."""
+
+    def test_status_transitions_for_message(self):
+        """Status should transition: connected -> processing -> ready."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            # Initial: connected
+            data = websocket.receive_json()
+            assert data["status"] == "connected"
+
+            websocket.send_json({"type": "message", "content": "test"})
+
+            # Processing
+            data = websocket.receive_json()
+            assert data["type"] == "status"
+            assert data["status"] == "processing"
+
+            # Response message
+            websocket.receive_json()
+
+            # Ready
+            data = websocket.receive_json()
+            assert data["type"] == "status"
+            assert data["status"] == "ready"
+
+    def test_ready_status_after_each_message(self):
+        """Each message should end with ready status."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()
+
+            for i in range(3):
+                websocket.send_json({"type": "message", "content": f"msg {i}"})
+
+                websocket.receive_json()  # processing
+                websocket.receive_json()  # message
+                data = websocket.receive_json()  # ready
+
+                assert data["status"] == "ready"

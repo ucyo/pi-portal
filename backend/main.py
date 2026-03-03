@@ -3,9 +3,11 @@
 import json
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+
+from backend.websocket import websocket_endpoint
 
 app = FastAPI(title="Pi Portal")
 
@@ -41,6 +43,13 @@ async def get_starter_prompts():
 
     # Default prompts if config file doesn't exist
     return {"prompts": [{"icon": "💡", "text": "What can you help me with?"}]}
+
+
+# WebSocket endpoint for chat
+@app.websocket("/ws")
+async def ws_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time chat communication."""
+    await websocket_endpoint(websocket)
 
 
 # Static files - must be mounted after API routes

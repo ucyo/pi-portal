@@ -86,13 +86,13 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 - [x] Ensure responsive design basics
 
 #### M1.2 - WebSocket connection
-- [ ] Create `frontend/app.js` for client-side logic
-- [ ] Implement WebSocket connection to backend
-- [ ] Handle connection open/close/error events
-- [ ] Display connection status to user
-- [ ] Implement reconnection logic on disconnect
-- [ ] Create `backend/websocket.py` for WebSocket endpoint
-- [ ] Register WebSocket route in FastAPI
+- [x] Create `frontend/app.js` for client-side logic
+- [x] Implement WebSocket connection to backend
+- [x] Handle connection open/close/error events
+- [x] Display connection status to user
+- [x] Implement reconnection logic on disconnect
+- [x] Create `backend/websocket.py` for WebSocket endpoint
+- [x] Register WebSocket route in FastAPI
 
 #### M1.3 - Pi subprocess management
 - [ ] Implement Pi process spawning on first WebSocket connection

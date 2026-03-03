@@ -1,0 +1,9 @@
+services:
+  pi:
+    image: ucyo/pi:latest
+    volumes:
+      - ~/.pi/skills:/skills
+      - ./:/workspace
+    ports:
+      - 8080:8080
+    command: --skill /skills

@@ -8,7 +8,7 @@
 - [x] M0.4: completed - static files + CORS configured
 - [x] M0.5: completed - Pi RPC communication verified
 
-## Current: M1 - Basic Chat
+## Completed: M1 - Basic Chat
 
 - [x] M1.1: completed - Frontend HTML/CSS structure
 - [x] M1.2: completed - WebSocket connection
@@ -16,10 +16,17 @@
 - [x] M1.4: completed - Backend message routing
 - [x] M1.5: completed - Frontend message rendering
 
+## Current: M2/M3 - Session Persistence & Feedback
+
+- [ ] M2.1: not started - Session file parser
+- [x] M3.1: completed - Pi feedback extension (.pi/extensions/feedback.ts)
+
 ## Notes
-- Dependencies: fastapi, uvicorn, aiosqlite, mlflow, websockets
+- Architecture changed: No SQLite, use Pi's JSONL sessions as single source of truth
+- Feedback stored via Pi extension using CustomEntry (customType: "pi-portal-feedback")
+- Messages identified by timestamp field for feedback matching
+- Dependencies: fastapi, uvicorn, mlflow, websockets (removed aiosqlite dependency)
 - Dev deps: pytest, pytest-asyncio, httpx, ruff, honcho
-- Makefile added for common commands
 - Pi client tested: starts subprocess, sends commands, parses responses
 - WebSocket: backend/websocket.py + frontend/app.js with reconnection logic
 - M1.3: Pi lifecycle integrated into WebSocket (lazy start, crash recovery, shutdown hook)

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Added Pi feedback extension for storing ratings in session JSONL
+* Changed architecture to use Pi session files instead of SQLite for persistence
+* Added tests for feedback extension and session parser
 * Added streaming message display with real-time text updates
 * Added collapsible "Thinking..." section showing Pi's reasoning
 * Added tool execution indicators with status (running/success/error)

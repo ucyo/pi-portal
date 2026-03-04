@@ -138,13 +138,13 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 > Pi manages session files in `data/pi_sessions/`. We parse these files to list and view sessions.
 
 #### M2.1 - Session file parser
-- [ ] Create `backend/session_parser.py` module
-- [ ] Parse Pi's JSONL session format (see Pi's session.md docs)
-- [ ] Extract session header (id, timestamp, cwd)
-- [ ] Extract messages (user, assistant, toolResult roles)
-- [ ] Extract session name from `session_info` entry if present
-- [ ] Handle tree structure (follow parentId chain from leaf)
-- [ ] Generate session title from first user message if no name set
+- [x] Create `backend/session_parser.py` module
+- [x] Parse Pi's JSONL session format (see Pi's session.md docs)
+- [x] Extract session header (id, timestamp, cwd)
+- [x] Extract messages (user, assistant, toolResult roles)
+- [x] Extract session name from `session_info` entry if present
+- [x] Handle tree structure (follow parentId chain from leaf)
+- [x] Generate session title from first user message if no name set
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M2.2 - Session list API

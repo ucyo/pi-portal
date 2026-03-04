@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added session file parser for Pi's JSONL format (extracts messages, feedback, metadata)
 * Added Pi feedback extension for storing ratings in session JSONL
 * Changed architecture to use Pi session files instead of SQLite for persistence
 * Added tests for feedback extension and session parser

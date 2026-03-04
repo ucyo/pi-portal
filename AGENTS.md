@@ -76,8 +76,8 @@ make check             # Run tests + lint
 - Test WebSocket connection and reconnection
 - Test Pi communication end-to-end
 - Test error scenarios (Pi crash, disconnect)
-- Verify data persists in SQLite
-- Check MLflow UI for traces
+- Verify data persists in Pi session files
+- Check MLflow UI for traces (when implemented)
 
 ## After Completing Work
 
@@ -199,12 +199,13 @@ Example:
 
 ```
 pi-portal/
+├── .pi/
+│   └── extensions/
+│       └── feedback.ts   # Pi extension for storing feedback
 ├── backend/
 │   ├── main.py           # FastAPI app entry point
-│   ├── config.py         # Configuration management
-│   ├── database.py       # SQLite setup and queries
 │   ├── pi_client.py      # Pi RPC communication
-│   ├── mlflow_client.py  # MLflow tracing
+│   ├── session_parser.py # Pi JSONL session file parser
 │   └── websocket.py      # WebSocket handlers
 ├── frontend/
 │   ├── index.html        # Main HTML page
@@ -212,12 +213,11 @@ pi-portal/
 │   └── app.js            # Client-side logic
 ├── tests/
 │   ├── conftest.py       # Pytest fixtures
-│   ├── test_app.py       # App configuration tests
-│   ├── test_health.py    # Health endpoint tests
-│   └── test_procfile.py  # Procfile tests
+│   └── test_*.py         # Test files
+├── config/
+│   └── starter_prompts.json  # Configurable starter prompts
 ├── data/
-│   ├── app.db            # SQLite database (generated)
-│   └── pi_sessions/      # Pi's JSONL sessions
+│   └── pi_sessions/      # Pi's JSONL sessions (single source of truth)
 ├── Procfile              # Honcho process definitions
 ├── pyproject.toml        # Python project config
 ├── README.md

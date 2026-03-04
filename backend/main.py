@@ -136,11 +136,19 @@ async def get_session(session_id: str):
         # Convert messages to JSON-serializable format
         messages = []
         for msg in parsed.messages:
+            # Extract content blocks for assistant messages (thinking, text, toolCall)
+            content_blocks = None
+            if msg.role == "assistant" and isinstance(
+                msg.raw_message.get("content"), list
+            ):
+                content_blocks = msg.raw_message.get("content")
+
             messages.append(
                 {
                     "id": msg.id,
                     "role": msg.role,
                     "content": msg.content,
+                    "content_blocks": content_blocks,
                     "timestamp": msg.timestamp,
                     "message_timestamp": msg.message_timestamp,
                 }

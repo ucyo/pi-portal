@@ -644,7 +644,78 @@ kbd {
     50% { opacity: 0; }
 }
 
-/* Thinking block */
+/* Processing block (combined thinking + tools) */
+.message-processing {
+    margin-bottom: 12px;
+}
+
+.message-processing details {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+}
+
+.message-processing summary {
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-style: italic;
+    user-select: none;
+}
+
+.message-processing summary:hover {
+    color: var(--text-primary);
+}
+
+.processing-content {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-primary);
+}
+
+.processing-thinking {
+    margin-bottom: 12px;
+}
+
+.processing-thinking-label,
+.processing-tools-label {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.processing-thinking-content {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    font-style: italic;
+}
+
+.processing-tools {
+    margin-top: 8px;
+}
+
+.tool-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.tool-item .tool-status-icon {
+    color: var(--accent-success);
+}
+
+.tool-item .tool-name {
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+}
+
+/* Legacy thinking block (for streaming) */
 .message-thinking {
     margin-bottom: 12px;
 }
@@ -677,37 +748,119 @@ kbd {
     font-style: italic;
 }
 
-/* Tool indicators */
-.tool-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    margin: 8px 0;
+/* Tool blocks (collapsible like thinking) */
+.message-tools {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tool-block {
     background: var(--bg-tertiary);
     border-radius: var(--radius-sm);
+    border-left: 3px solid var(--border-primary);
+    overflow: hidden;
+}
+
+.tool-block.running {
+    border-left-color: var(--accent-primary);
+}
+
+.tool-block.success {
+    border-left-color: var(--accent-success);
+}
+
+.tool-block.error {
+    border-left-color: var(--accent-error);
+}
+
+.tool-block summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
     font-size: 0.85rem;
     color: var(--text-secondary);
+    list-style: none;
 }
 
-.tool-indicator.running {
-    border-left: 3px solid var(--accent-primary);
+.tool-block summary::-webkit-details-marker {
+    display: none;
 }
 
-.tool-indicator.success {
-    border-left: 3px solid var(--accent-success);
+.tool-block summary::before {
+    content: '▶';
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+    color: var(--text-tertiary);
 }
 
-.tool-indicator.success .tool-icon {
+.tool-block[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.tool-block summary:hover {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+}
+
+.tool-status-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    font-size: 0.85rem;
+}
+
+.tool-block.success .tool-status-icon {
     color: var(--accent-success);
 }
 
-.tool-indicator.error {
-    border-left: 3px solid var(--accent-error);
+.tool-block.error .tool-status-icon {
+    color: var(--accent-error);
 }
 
-.tool-indicator.error .tool-icon {
+.tool-name {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.tool-status-text {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.tool-block.running .tool-status-text {
+    color: var(--accent-primary);
+}
+
+.tool-block.success .tool-status-text {
+    color: var(--accent-success);
+}
+
+.tool-block.error .tool-status-text {
     color: var(--accent-error);
+}
+
+.tool-details {
+    padding: 0 12px 10px 12px;
+    border-top: 1px solid var(--border-primary);
+    margin-top: 0;
+}
+
+.tool-details-content {
+    padding-top: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .tool-spinner {

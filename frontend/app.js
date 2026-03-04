@@ -270,45 +270,71 @@ function handleToolStart(data) {
         createStreamingMessage();
     }
     
-    // Add tool indicator
-    const toolIndicator = document.createElement('div');
-    toolIndicator.className = 'tool-indicator running';
-    toolIndicator.dataset.toolUseId = data.tool_use_id || '';
-    toolIndicator.innerHTML = `
-        <span class="tool-icon">🔧</span>
-        <span class="tool-name">Running: ${escapeHtml(data.tool)}</span>
-        <span class="tool-spinner"></span>
+    // Get or create tools container
+    let toolsContainer = state.currentMessageElement.querySelector('.message-tools');
+    if (!toolsContainer) {
+        toolsContainer = document.createElement('div');
+        toolsContainer.className = 'message-tools';
+        // Insert before message-content
+        const contentEl = state.currentMessageElement.querySelector('.message-content');
+        if (contentEl) {
+            contentEl.parentNode.insertBefore(toolsContainer, contentEl);
+        }
+    }
+    
+    // Create collapsible tool block
+    const toolBlock = document.createElement('details');
+    toolBlock.className = 'tool-block running';
+    toolBlock.dataset.toolUseId = data.tool_use_id || '';
+    toolBlock.innerHTML = `
+        <summary>
+            <span class="tool-status-icon">
+                <span class="tool-spinner"></span>
+            </span>
+            <span class="tool-name">${escapeHtml(data.tool)}</span>
+            <span class="tool-status-text">running...</span>
+        </summary>
+        <div class="tool-details">
+            <div class="tool-details-content">Executing...</div>
+        </div>
     `;
     
-    const contentEl = state.currentMessageElement.querySelector('.message-content');
-    if (contentEl) {
-        contentEl.appendChild(toolIndicator);
-        scrollToBottom();
-    }
+    toolsContainer.appendChild(toolBlock);
+    scrollToBottom();
 }
 
 /**
  * Handle tool execution result.
  */
 function handleToolResult(data) {
-    // Find and update the tool indicator
-    if (state.currentMessageElement) {
-        const indicators = state.currentMessageElement.querySelectorAll('.tool-indicator.running');
-        indicators.forEach(indicator => {
-            if (!data.tool_use_id || indicator.dataset.toolUseId === data.tool_use_id) {
-                indicator.classList.remove('running');
-                indicator.classList.add(data.success ? 'success' : 'error');
-                const spinner = indicator.querySelector('.tool-spinner');
-                if (spinner) {
-                    spinner.remove();
-                }
-                const icon = indicator.querySelector('.tool-icon');
-                if (icon) {
-                    icon.textContent = data.success ? '✓' : '✗';
-                }
+    if (!state.currentMessageElement) return;
+    
+    // Find the tool block
+    const toolBlocks = state.currentMessageElement.querySelectorAll('.tool-block.running');
+    toolBlocks.forEach(block => {
+        if (!data.tool_use_id || block.dataset.toolUseId === data.tool_use_id) {
+            block.classList.remove('running');
+            block.classList.add(data.success ? 'success' : 'error');
+            
+            // Update status icon
+            const statusIcon = block.querySelector('.tool-status-icon');
+            if (statusIcon) {
+                statusIcon.innerHTML = data.success ? '✓' : '✗';
             }
-        });
-    }
+            
+            // Update status text
+            const statusText = block.querySelector('.tool-status-text');
+            if (statusText) {
+                statusText.textContent = data.success ? 'completed' : 'failed';
+            }
+            
+            // Update details content
+            const detailsContent = block.querySelector('.tool-details-content');
+            if (detailsContent) {
+                detailsContent.textContent = data.success ? 'Tool executed successfully' : 'Tool execution failed';
+            }
+        }
+    });
 }
 
 /**
@@ -1099,7 +1125,7 @@ function displaySession(session) {
         // Look up feedback for this message (using message_timestamp, which is the Unix ms timestamp)
         const msgTs = msg.message_timestamp;
         const feedback = msgTs ? feedbackByTimestamp[msgTs] : null;
-        appendHistoryMessage(msg.role, msg.content, msg.message_timestamp, feedback);
+        appendHistoryMessage(msg.role, msg.content, msg.message_timestamp, feedback, msg.content_blocks);
     }
     
     // Update sidebar highlight and input state
@@ -1112,7 +1138,7 @@ function displaySession(session) {
 /**
  * Append a message from history (past session).
  */
-function appendHistoryMessage(role, content, timestamp, feedback = null) {
+function appendHistoryMessage(role, content, timestamp, feedback = null, contentBlocks = null) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
     
@@ -1130,19 +1156,88 @@ function appendHistoryMessage(role, content, timestamp, feedback = null) {
     } else if (role === 'assistant') {
         displayRole = 'Pi';
     } else if (role === 'toolResult') {
-        displayRole = 'Tool';
+        // Skip rendering tool results as separate messages
+        // The tool call block already shows "completed" status
+        // Tool output can be viewed by expanding the tool call if needed
+        return;
     }
+    
+    // Extract thinking and tool blocks for assistant messages
+    let processingHtml = '';
+    let textContent = content || '';
+    let hasThinkingOrTools = false;
+    
+    if (role === 'assistant' && contentBlocks && Array.isArray(contentBlocks)) {
+        // Extract thinking content
+        const thinkingBlocks = contentBlocks.filter(b => b.type === 'thinking');
+        const thinkingText = thinkingBlocks.map(b => b.thinking || '').join('\n').trim();
+        
+        // Extract tool calls
+        const toolBlocks = contentBlocks.filter(b => b.type === 'toolCall');
+        
+        hasThinkingOrTools = thinkingText.length > 0 || toolBlocks.length > 0;
+        
+        if (hasThinkingOrTools) {
+            // Build tool items HTML
+            const toolItemsHtml = toolBlocks.map(tool => `
+                <div class="tool-item">
+                    <span class="tool-status-icon">✓</span>
+                    <span class="tool-name">${escapeHtml(tool.name || 'unknown')}</span>
+                </div>
+            `).join('');
+            
+            // Build thinking content HTML
+            const thinkingContentHtml = thinkingText ? `
+                <div class="processing-thinking">
+                    <div class="processing-thinking-label">Thinking:</div>
+                    <div class="processing-thinking-content">${escapeHtml(thinkingText)}</div>
+                </div>
+            ` : '';
+            
+            // Build tools section HTML
+            const toolsSectionHtml = toolBlocks.length > 0 ? `
+                <div class="processing-tools">
+                    <div class="processing-tools-label">Tools used:</div>
+                    ${toolItemsHtml}
+                </div>
+            ` : '';
+            
+            // Determine summary text
+            const summaryText = toolBlocks.length > 0 
+                ? `Used ${toolBlocks.length} tool${toolBlocks.length > 1 ? 's' : ''}`
+                : 'Thinking...';
+            
+            processingHtml = `
+                <div class="message-processing">
+                    <details>
+                        <summary>${summaryText}</summary>
+                        <div class="processing-content">
+                            ${thinkingContentHtml}
+                            ${toolsSectionHtml}
+                        </div>
+                    </details>
+                </div>
+            `;
+        }
+    }
+    
+    // Only show message-content div if there's actual text content
+    const hasTextContent = textContent.trim().length > 0;
+    const contentHtml = hasTextContent
+        ? `<div class="message-content">${renderContent(textContent)}</div>`
+        : '';
     
     messageDiv.innerHTML = `
         <div class="message-header">
             <span class="message-role">${displayRole}</span>
             ${timeStr ? `<span class="message-time">${timeStr}</span>` : ''}
         </div>
-        <div class="message-content">${renderContent(content || '')}</div>
+        ${processingHtml}
+        ${contentHtml}
     `;
     
-    // Add feedback buttons for assistant messages
-    if (role === 'assistant') {
+    // Add feedback buttons only for assistant messages WITH text content
+    if (role === 'assistant' && hasTextContent) {
         addFeedbackButtons(messageDiv, timestamp, feedback);
     }
     

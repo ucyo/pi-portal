@@ -23,7 +23,11 @@ const state = {
     reconnectTimeout: null,
     pingInterval: null,
     isProcessing: false,
-    chatStarted: false
+    chatStarted: false,
+    // Streaming message state
+    currentMessageElement: null,
+    currentMessageContent: '',
+    currentThinkingContent: ''
 };
 
 // ============================================
@@ -119,7 +123,23 @@ function handleMessage(event) {
             case 'status':
                 handleStatusMessage(data);
                 break;
+            case 'text_delta':
+                handleTextDelta(data);
+                break;
+            case 'thinking_delta':
+                handleThinkingDelta(data);
+                break;
+            case 'tool_start':
+                handleToolStart(data);
+                break;
+            case 'tool_result':
+                handleToolResult(data);
+                break;
+            case 'message_complete':
+                handleMessageComplete(data);
+                break;
             case 'message':
+                // Legacy message format (non-streaming)
                 handleChatMessage(data);
                 break;
             case 'error':
@@ -129,7 +149,7 @@ function handleMessage(event) {
                 // Ping response received, connection is alive
                 break;
             default:
-                console.warn('Unknown message type:', data.type);
+                console.log('Unhandled message type:', data.type);
         }
     } catch (error) {
         console.error('Error parsing message:', error);
@@ -171,11 +191,209 @@ function handleChatMessage(data) {
 function handleErrorMessage(data) {
     console.error('Server error:', data.message);
     hideTypingIndicator();
+    finalizeStreamingMessage();
     state.isProcessing = false;
     updateInputState();
     
     // Show error in chat
     appendSystemMessage(`Error: ${data.message}`);
+}
+
+/**
+ * Handle streaming text delta.
+ */
+function handleTextDelta(data) {
+    hideTypingIndicator();
+    
+    // Create streaming message element if needed
+    if (!state.currentMessageElement) {
+        createStreamingMessage();
+    }
+    
+    // Append delta to content
+    state.currentMessageContent += data.delta;
+    updateStreamingMessageContent();
+}
+
+/**
+ * Handle streaming thinking delta.
+ */
+function handleThinkingDelta(data) {
+    hideTypingIndicator();
+    
+    // Create streaming message element if needed
+    if (!state.currentMessageElement) {
+        createStreamingMessage();
+    }
+    
+    // Update thinking content (shown as collapsed by default)
+    state.currentThinkingContent += data.delta;
+    updateStreamingThinkingContent();
+}
+
+/**
+ * Handle tool execution start.
+ */
+function handleToolStart(data) {
+    hideTypingIndicator();
+    
+    // Create streaming message element if needed
+    if (!state.currentMessageElement) {
+        createStreamingMessage();
+    }
+    
+    // Add tool indicator
+    const toolIndicator = document.createElement('div');
+    toolIndicator.className = 'tool-indicator running';
+    toolIndicator.dataset.toolUseId = data.tool_use_id || '';
+    toolIndicator.innerHTML = `
+        <span class="tool-icon">🔧</span>
+        <span class="tool-name">Running: ${escapeHtml(data.tool)}</span>
+        <span class="tool-spinner"></span>
+    `;
+    
+    const contentEl = state.currentMessageElement.querySelector('.message-content');
+    if (contentEl) {
+        contentEl.appendChild(toolIndicator);
+        scrollToBottom();
+    }
+}
+
+/**
+ * Handle tool execution result.
+ */
+function handleToolResult(data) {
+    // Find and update the tool indicator
+    if (state.currentMessageElement) {
+        const indicators = state.currentMessageElement.querySelectorAll('.tool-indicator.running');
+        indicators.forEach(indicator => {
+            if (!data.tool_use_id || indicator.dataset.toolUseId === data.tool_use_id) {
+                indicator.classList.remove('running');
+                indicator.classList.add(data.success ? 'success' : 'error');
+                const spinner = indicator.querySelector('.tool-spinner');
+                if (spinner) {
+                    spinner.remove();
+                }
+                const icon = indicator.querySelector('.tool-icon');
+                if (icon) {
+                    icon.textContent = data.success ? '✓' : '✗';
+                }
+            }
+        });
+    }
+}
+
+/**
+ * Handle message complete event.
+ */
+function handleMessageComplete(data) {
+    hideTypingIndicator();
+    
+    // If we have a streaming message, finalize it
+    if (state.currentMessageElement) {
+        finalizeStreamingMessage();
+    } else if (data.content) {
+        // No streaming happened, just show the complete message
+        appendMessage('assistant', data.content);
+    }
+}
+
+/**
+ * Create a new streaming message element.
+ */
+function createStreamingMessage() {
+    hideWelcome();
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant streaming';
+    
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    messageDiv.innerHTML = `
+        <div class="message-header">
+            <span class="message-role">Pi</span>
+            <span class="message-time">${time}</span>
+        </div>
+        <div class="message-thinking" style="display: none;">
+            <details>
+                <summary>Thinking...</summary>
+                <div class="thinking-content"></div>
+            </details>
+        </div>
+        <div class="message-content"></div>
+    `;
+    
+    elements.chatMessages.appendChild(messageDiv);
+    state.currentMessageElement = messageDiv;
+    state.currentMessageContent = '';
+    state.currentThinkingContent = '';
+    scrollToBottom();
+}
+
+/**
+ * Update the streaming message content.
+ */
+function updateStreamingMessageContent() {
+    if (!state.currentMessageElement) return;
+    
+    const contentEl = state.currentMessageElement.querySelector('.message-content');
+    if (contentEl) {
+        // Render markdown-ish content (basic for now)
+        contentEl.innerHTML = renderContent(state.currentMessageContent);
+        scrollToBottom();
+    }
+}
+
+/**
+ * Update the streaming thinking content.
+ */
+function updateStreamingThinkingContent() {
+    if (!state.currentMessageElement) return;
+    
+    const thinkingEl = state.currentMessageElement.querySelector('.message-thinking');
+    const thinkingContentEl = state.currentMessageElement.querySelector('.thinking-content');
+    
+    if (thinkingEl && thinkingContentEl && state.currentThinkingContent) {
+        thinkingEl.style.display = 'block';
+        thinkingContentEl.textContent = state.currentThinkingContent;
+    }
+}
+
+/**
+ * Finalize the streaming message.
+ */
+function finalizeStreamingMessage() {
+    if (state.currentMessageElement) {
+        state.currentMessageElement.classList.remove('streaming');
+        state.currentMessageElement = null;
+    }
+    state.currentMessageContent = '';
+    state.currentThinkingContent = '';
+}
+
+/**
+ * Render message content with basic formatting.
+ */
+function renderContent(content) {
+    // Basic markdown-like rendering
+    let html = escapeHtml(content);
+    
+    // Code blocks (```)
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+    
+    // Inline code (`)
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    
+    // Bold (**)
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    
+    // Italic (*)
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    
+    // Line breaks
+    html = html.replace(/\n/g, '<br>');
+    
+    return html;
 }
 
 /**

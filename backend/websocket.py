@@ -126,7 +126,9 @@ async def process_pi_message(
         websocket: The WebSocket to send responses to.
         content: The user message content.
     """
-    logger.info(f"[WS] Processing user message: {content[:100]}{'...' if len(content) > 100 else ''}")
+    logger.info(
+        f"[WS] Processing user message: {content[:100]}{'...' if len(content) > 100 else ''}"
+    )
 
     # Ensure Pi is running (with crash recovery)
     client = await ensure_pi_running()
@@ -165,38 +167,60 @@ async def process_pi_message(
                         )
                         break
 
-            elif event_type == "text_delta":
-                # Streaming text chunk
-                delta = event.get("delta", "")
-                if delta:
-                    full_response += delta
+            elif event_type == "message_update":
+                # Handle nested assistant message events
+                assistant_event = event.get("assistantMessageEvent", {})
+                assistant_event_type = assistant_event.get("type")
+
+                if assistant_event_type == "text_delta":
+                    # Streaming text chunk
+                    delta = assistant_event.get("delta", "")
+                    if delta:
+                        full_response += delta
+                        await manager.send_message(
+                            websocket,
+                            {
+                                "type": "text_delta",
+                                "delta": delta,
+                            },
+                        )
+
+                elif assistant_event_type == "thinking_delta":
+                    # Streaming thinking chunk (send to frontend for transparency)
+                    delta = assistant_event.get("delta", "")
+                    if delta:
+                        await manager.send_message(
+                            websocket,
+                            {
+                                "type": "thinking_delta",
+                                "delta": delta,
+                            },
+                        )
+
+                elif assistant_event_type == "tool_use_start":
+                    # Tool execution started
+                    tool_name = assistant_event.get("name", "unknown")
                     await manager.send_message(
                         websocket,
                         {
-                            "type": "text_delta",
-                            "delta": delta,
+                            "type": "tool_start",
+                            "tool": tool_name,
+                            "tool_use_id": assistant_event.get("toolUseId"),
                         },
                     )
 
-            elif event_type == "tool_start":
-                # Tool execution started
-                tool_name = event.get("tool", "unknown")
-                await manager.send_message(
-                    websocket,
-                    {
-                        "type": "tool_start",
-                        "tool": tool_name,
-                    },
-                )
+                elif assistant_event_type == "tool_use_end":
+                    # Tool use block completed (input fully received)
+                    pass  # We'll show result when tool_result comes
 
             elif event_type == "tool_result":
-                # Tool execution completed
+                # Tool execution completed with result
                 await manager.send_message(
                     websocket,
                     {
                         "type": "tool_result",
-                        "tool": event.get("tool"),
-                        "success": event.get("success", True),
+                        "tool_use_id": event.get("toolUseId"),
+                        "success": not event.get("isError", False),
                     },
                 )
 

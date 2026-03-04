@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* Added streaming message display with real-time text updates
+* Added collapsible "Thinking..." section showing Pi's reasoning
+* Added tool execution indicators with status (running/success/error)
+* Added basic markdown rendering (code blocks, bold, italic)
 * Added Pi subprocess integration with WebSocket for real-time chat
 * Added crash recovery with automatic Pi restart (exponential backoff)
 * Added structured logging for Pi communication (TX/RX format)

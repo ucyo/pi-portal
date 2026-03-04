@@ -13,6 +13,8 @@
 - [x] M1.1: completed - Frontend HTML/CSS structure
 - [x] M1.2: completed - WebSocket connection
 - [x] M1.3: completed - Pi subprocess management
+- [x] M1.4: completed - Backend message routing
+- [x] M1.5: completed - Frontend message rendering
 
 ## Notes
 - Dependencies: fastapi, uvicorn, aiosqlite, mlflow, websockets
@@ -21,3 +23,5 @@
 - Pi client tested: starts subprocess, sends commands, parses responses
 - WebSocket: backend/websocket.py + frontend/app.js with reconnection logic
 - M1.3: Pi lifecycle integrated into WebSocket (lazy start, crash recovery, shutdown hook)
+- M1.4: Handles Pi RPC events (message_update, text_delta, thinking_delta, tool events)
+- M1.5: Streaming UI with thinking section, tool indicators, markdown rendering

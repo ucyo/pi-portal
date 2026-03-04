@@ -104,30 +104,30 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M1.3 - Pi subprocess management
-- [ ] Implement Pi process spawning on first WebSocket connection
-- [ ] Manage Pi lifecycle per session (or shared instance)
-- [ ] Handle stdin/stdout communication with Pi process
-- [ ] Parse JSON-RPC responses from Pi
-- [ ] Implement graceful shutdown of Pi process
-- [ ] Handle Pi process crash and restart
+- [x] Implement Pi process spawning on first WebSocket connection
+- [x] Manage Pi lifecycle per session (or shared instance)
+- [x] Handle stdin/stdout communication with Pi process
+- [x] Parse JSON-RPC responses from Pi
+- [x] Implement graceful shutdown of Pi process
+- [x] Handle Pi process crash and restart
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M1.4 - Backend message routing
-- [ ] Receive user message from WebSocket
-- [ ] Format message as JSON-RPC request for Pi
-- [ ] Send request to Pi subprocess
-- [ ] Stream Pi response chunks back to WebSocket
-- [ ] Handle tool execution events from Pi
-- [ ] Send completion signal when Pi finishes responding
+- [x] Receive user message from WebSocket
+- [x] Format message as JSON-RPC request for Pi
+- [x] Send request to Pi subprocess
+- [x] Stream Pi response chunks back to WebSocket
+- [x] Handle tool execution events from Pi
+- [x] Send completion signal when Pi finishes responding
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M1.5 - Frontend message rendering
-- [ ] Display user messages in chat (right-aligned or distinct style)
-- [ ] Display Pi responses in chat (left-aligned or distinct style)
-- [ ] Render streaming responses (append chunks as they arrive)
-- [ ] Auto-scroll to latest message
-- [ ] Support markdown rendering in Pi responses
-- [ ] Show typing/loading indicator while Pi is responding
+- [x] Display user messages in chat (right-aligned or distinct style)
+- [x] Display Pi responses in chat (left-aligned or distinct style)
+- [x] Render streaming responses (append chunks as they arrive)
+- [x] Auto-scroll to latest message
+- [x] Support markdown rendering in Pi responses
+- [x] Show typing/loading indicator while Pi is responding
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 ---

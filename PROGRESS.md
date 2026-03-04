@@ -24,6 +24,7 @@
 - [x] Bug fix: WebSocket hanging on slash commands without content
 - [x] M2.3: completed - Sidebar session list (fetch, render, highlight, auto-refresh)
 - [x] M2.4: completed - View past session (API, load messages, read-only mode)
+- [x] M2.5: completed - New session button (WebSocket command, UI reset)
 
 ## Notes
 - Architecture changed: No SQLite, use Pi's JSONL sessions as single source of truth

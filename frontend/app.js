@@ -30,7 +30,8 @@ const state = {
     currentThinkingContent: '',
     // Session state
     sessions: [],
-    currentSessionId: null,
+    currentSessionId: null,        // Session we're currently viewing
+    piActiveSessionId: null,       // Session Pi is actively using (can send messages to)
     sessionRefreshPending: false,
     // Read-only mode for viewing past sessions
     isViewingPastSession: false
@@ -154,6 +155,9 @@ function handleMessage(event) {
                 break;
             case 'pong':
                 // Ping response received, connection is alive
+                break;
+            case 'new_session_created':
+                handleNewSessionCreated(data);
                 break;
             default:
                 console.log('Unhandled message type:', data.type);
@@ -304,8 +308,9 @@ function handleMessageComplete(data) {
         appendMessage('assistant', data.content);
     }
     
-    // Update session ID if provided
+    // Update session ID if provided - this is the session Pi is actively using
     if (data.session_id) {
+        state.piActiveSessionId = data.session_id;
         state.currentSessionId = data.session_id;
     }
     
@@ -804,11 +809,16 @@ async function loadSession(sessionId) {
 }
 
 /**
- * Display a loaded session (read-only).
+ * Display a loaded session.
+ * If it's the active session (Pi is using it), keep it editable.
+ * Otherwise, show it as read-only.
  */
 function displaySession(session) {
-    // Enter read-only mode
-    state.isViewingPastSession = true;
+    // Check if this is the active session Pi is using
+    const isActiveSession = session.id === state.piActiveSessionId;
+    
+    // Set state
+    state.isViewingPastSession = !isActiveSession;
     state.currentSessionId = session.id;
     state.chatStarted = true;
     
@@ -820,21 +830,23 @@ function displaySession(session) {
         elements.welcomeContainer.style.display = 'none';
     }
     
-    // Add read-only banner
-    const banner = document.createElement('div');
-    banner.className = 'read-only-banner';
-    banner.innerHTML = `
-        <span class="read-only-icon">📖</span>
-        <span class="read-only-text">Viewing past session: ${escapeHtml(session.display_name)}</span>
-    `;
-    elements.chatMessages.appendChild(banner);
+    // Add read-only banner only for past sessions
+    if (!isActiveSession) {
+        const banner = document.createElement('div');
+        banner.className = 'read-only-banner';
+        banner.innerHTML = `
+            <span class="read-only-icon">📖</span>
+            <span class="read-only-text">Viewing past session: ${escapeHtml(session.display_name)}</span>
+        `;
+        elements.chatMessages.appendChild(banner);
+    }
     
     // Display all messages
     for (const msg of session.messages) {
         appendHistoryMessage(msg.role, msg.content, msg.timestamp);
     }
     
-    // Update input state (will disable it)
+    // Update input state
     updateInputState();
     
     scrollToBottom();
@@ -906,6 +918,85 @@ function scheduleSessionRefresh() {
     }, 1000);
 }
 
+/**
+ * Request a new session from the server.
+ */
+function requestNewSession() {
+    if (!state.connected || state.isProcessing) {
+        return;
+    }
+    
+    state.ws.send(JSON.stringify({ type: 'new_session' }));
+}
+
+/**
+ * Handle new session created response.
+ */
+function handleNewSessionCreated(data) {
+    console.log('New session created:', data.session_id);
+    
+    // Reset UI to initial state
+    resetChatUI();
+    
+    // Update session IDs - this is now the active session
+    state.piActiveSessionId = data.session_id;
+    state.currentSessionId = data.session_id;
+    
+    // Refresh session list
+    scheduleSessionRefresh();
+}
+
+/**
+ * Reset the chat UI to initial state.
+ */
+function resetChatUI() {
+    // Exit read-only mode
+    state.isViewingPastSession = false;
+    state.chatStarted = false;
+    state.currentSessionId = null;
+    
+    // Clear any streaming state
+    finalizeStreamingMessage();
+    
+    // Clear chat messages
+    elements.chatMessages.innerHTML = '';
+    
+    // Re-add welcome container
+    const welcomeHtml = `
+        <div class="welcome-container" id="welcomeContainer">
+            <div class="welcome-header">
+                <h1>Welcome to Pi Portal</h1>
+                <p>Your interface to the Pi coding agent. Ask questions, get help with code, or explore ideas.</p>
+            </div>
+            
+            <div class="starter-prompts">
+                <h2>Try asking...</h2>
+                <div class="prompt-grid" id="promptGrid">
+                    <!-- Starter prompts loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    `;
+    elements.chatMessages.innerHTML = welcomeHtml;
+    
+    // Update element references
+    elements.welcomeContainer = document.getElementById('welcomeContainer');
+    elements.promptGrid = document.getElementById('promptGrid');
+    
+    // Reload starter prompts
+    loadStarterPrompts();
+    
+    // Update input state
+    updateInputState();
+    
+    // Clear active session highlight
+    if (elements.sessionList) {
+        elements.sessionList.querySelectorAll('.session-item').forEach(item => {
+            item.classList.remove('active');
+        });
+    }
+}
+
 // ============================================
 // Input Handling
 // ============================================
@@ -957,9 +1048,9 @@ function setupEventListeners() {
         }
     });
     
-    // New session button (placeholder for M2)
+    // New session button
     elements.newSessionBtn.addEventListener('click', () => {
-        console.log('New session clicked - will be implemented in M2');
+        requestNewSession();
     });
 }
 

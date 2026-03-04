@@ -2,11 +2,15 @@
 
 import asyncio
 import logging
+from pathlib import Path
 from typing import Set
 
 from fastapi import WebSocket, WebSocketDisconnect
 
 from backend.pi_client import PiClient
+
+# Session directory path
+SESSIONS_PATH = Path("data/pi_sessions")
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +62,29 @@ class ConnectionManager:
 
 # Global connection manager instance
 manager = ConnectionManager()
+
+
+def get_most_recent_session_id() -> str | None:
+    """Get the session ID of the most recently modified session file."""
+    if not SESSIONS_PATH.exists():
+        return None
+
+    session_files = list(SESSIONS_PATH.glob("*.jsonl"))
+    if not session_files:
+        return None
+
+    # Sort by modification time, most recent first
+    session_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+
+    # Extract session ID from filename (format: {timestamp}_{session_id}.jsonl)
+    most_recent = session_files[0]
+    filename = most_recent.stem  # Remove .jsonl
+    parts = filename.split("_", 1)
+    if len(parts) == 2:
+        return parts[1]
+
+    return None
+
 
 # Shared Pi client instance
 _pi_client: PiClient | None = None
@@ -249,6 +276,10 @@ async def process_pi_message(
             elif event_type == "agent_end":
                 # Agent finished responding
                 messages = event.get("messages", [])
+
+                # Get the current session ID from most recent session file
+                session_id = get_most_recent_session_id()
+
                 # Send complete message for storage/display
                 await manager.send_message(
                     websocket,
@@ -257,6 +288,7 @@ async def process_pi_message(
                         "role": "assistant",
                         "content": full_response,
                         "messages": messages,
+                        "session_id": session_id,
                     },
                 )
                 break
@@ -310,16 +342,79 @@ async def process_pi_message(
             )
 
 
+async def process_new_session(websocket: WebSocket) -> None:
+    """Create a new Pi session.
+
+    Args:
+        websocket: The WebSocket to send responses to.
+    """
+    logger.info("[WS] Creating new session")
+
+    # Ensure Pi is running
+    client = await ensure_pi_running()
+    if client is None:
+        await manager.send_message(
+            websocket,
+            {
+                "type": "error",
+                "message": "Failed to start Pi process. Please try again.",
+            },
+        )
+        return
+
+    try:
+        # Send new_session command to Pi
+        await client.send_command({"type": "new_session"})
+
+        # Read the response
+        async for event in client.read_events():
+            event_type = event.get("type")
+            logger.debug(f"[WS] New session event: {event_type}")
+
+            if event_type == "response":
+                if event.get("command") == "new_session":
+                    if event.get("success"):
+                        # Pi doesn't return session_id directly, so we get it from
+                        # the most recent session file (created by Pi)
+                        # Small delay to ensure file is written
+                        await asyncio.sleep(0.1)
+                        session_id = get_most_recent_session_id()
+                        logger.info(f"[WS] New session created: {session_id}")
+                        await manager.send_message(
+                            websocket,
+                            {
+                                "type": "new_session_created",
+                                "session_id": session_id,
+                            },
+                        )
+                    else:
+                        error_msg = event.get("error", "Failed to create session")
+                        await manager.send_message(
+                            websocket,
+                            {"type": "error", "message": error_msg},
+                        )
+                    break
+
+    except Exception as e:
+        logger.exception("Error creating new session")
+        await manager.send_message(
+            websocket,
+            {"type": "error", "message": f"Failed to create session: {e}"},
+        )
+
+
 async def websocket_endpoint(websocket: WebSocket) -> None:
     """
     Handle WebSocket connections for chat.
 
     Message protocol:
     - Client sends: {"type": "message", "content": "user message"}
+    - Client sends: {"type": "new_session"}
     - Server sends: {"type": "text_delta", "delta": "..."}  (streaming)
     - Server sends: {"type": "message_complete", "role": "assistant", "content": "..."}
     - Server sends: {"type": "tool_start", "tool": "tool_name"}
     - Server sends: {"type": "tool_result", "tool": "tool_name", "success": true}
+    - Server sends: {"type": "new_session_created", "session_id": "..."}
     - Server sends: {"type": "status", "status": "connected" | "processing" | "ready"}
     - Server sends: {"type": "error", "message": "error description"}
     """
@@ -337,6 +432,17 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             if data.get("type") == "ping":
                 # Handle ping for keepalive
                 await manager.send_message(websocket, {"type": "pong"})
+                continue
+
+            if data.get("type") == "new_session":
+                # Handle new session request
+                await manager.send_message(
+                    websocket, {"type": "status", "status": "processing"}
+                )
+                await process_new_session(websocket)
+                await manager.send_message(
+                    websocket, {"type": "status", "status": "ready"}
+                )
                 continue
 
             if data.get("type") == "message":

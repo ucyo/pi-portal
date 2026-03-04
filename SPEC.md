@@ -175,11 +175,11 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M2.5 - New session button
-- [ ] Add "New Session" button in sidebar
-- [ ] Send `new_session` RPC command to Pi
-- [ ] Clear chat area in frontend
-- [ ] Show starter prompts again
-- [ ] Update sidebar session list
+- [x] Add "New Session" button in sidebar
+- [x] Send `new_session` RPC command to Pi
+- [x] Clear chat area in frontend
+- [x] Show starter prompts again
+- [x] Update sidebar session list
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 ---

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* Added "New Session" button to start fresh conversation
+* Added WebSocket new_session command to create new Pi session
+* Added UI reset when starting new session (clears chat, shows welcome)
+* Fixed current session remaining editable when switching between sessions
+* Added session_id tracking from session files for accurate active session detection
 * Added GET /api/sessions/{id} endpoint to fetch full session with messages
 * Added session viewing - click sidebar to load and display past session
 * Added read-only mode with banner and disabled input for past sessions

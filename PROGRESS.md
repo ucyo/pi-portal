@@ -19,9 +19,10 @@
 ## Current: M2/M3 - Session Persistence & Feedback
 
 - [x] M2.1: completed - Session file parser (backend/session_parser.py)
+- [x] M2.2: completed - Session list API (GET /api/sessions)
 - [x] M3.1: completed - Pi feedback extension (.pi/extensions/feedback.ts)
 - [x] Bug fix: WebSocket hanging on slash commands without content
-- [ ] M2.2: not started - Session list API
+- [ ] M2.3: not started - Sidebar session list
 
 ## Notes
 - Architecture changed: No SQLite, use Pi's JSONL sessions as single source of truth

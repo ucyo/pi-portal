@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.websocket import websocket_endpoint, stop_pi_client
+from backend.session_parser import get_session_metadata
 
 # Configure logging for Docker (stdout)
 logging.basicConfig(
@@ -46,6 +47,7 @@ app = FastAPI(title="Pi Portal", lifespan=lifespan)
 ROOT_PATH = Path(__file__).parent.parent
 CONFIG_PATH = ROOT_PATH / "config"
 FRONTEND_PATH = ROOT_PATH / "frontend"
+SESSIONS_PATH = ROOT_PATH / "data" / "pi_sessions"
 
 # CORS configuration for local development
 app.add_middleware(
@@ -74,6 +76,35 @@ async def get_starter_prompts():
 
     # Default prompts if config file doesn't exist
     return {"prompts": [{"icon": "💡", "text": "What can you help me with?"}]}
+
+
+@app.get("/api/sessions")
+async def list_sessions():
+    """
+    List all sessions with metadata.
+
+    Returns sessions ordered by most recent first.
+    """
+    sessions = []
+
+    if not SESSIONS_PATH.exists():
+        return {"sessions": []}
+
+    # Scan for JSONL session files
+    session_files = list(SESSIONS_PATH.glob("*.jsonl"))
+
+    for path in session_files:
+        try:
+            metadata = get_session_metadata(path)
+            sessions.append(metadata)
+        except Exception as e:
+            logger.warning(f"Failed to parse session {path.name}: {e}")
+            continue
+
+    # Sort by timestamp (most recent first)
+    sessions.sort(key=lambda s: s.get("timestamp", ""), reverse=True)
+
+    return {"sessions": sessions}
 
 
 # WebSocket endpoint for chat

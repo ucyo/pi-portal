@@ -148,11 +148,11 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M2.2 - Session list API
-- [ ] Create `GET /api/sessions` endpoint
-- [ ] Scan `data/pi_sessions/` directory for JSONL files
-- [ ] Parse each session file for metadata (id, title, timestamps)
-- [ ] Return list of sessions ordered by most recent first
-- [ ] Include message count per session
+- [x] Create `GET /api/sessions` endpoint
+- [x] Scan `data/pi_sessions/` directory for JSONL files
+- [x] Parse each session file for metadata (id, title, timestamps)
+- [x] Return list of sessions ordered by most recent first
+- [x] Include message count per session
 - [ ] Cache parsed metadata for performance (optional)
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 

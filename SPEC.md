@@ -209,12 +209,12 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M3.3 - Negative feedback modal
-- [ ] Create modal/popup component in HTML/CSS
-- [ ] Trigger modal when thumbs down is clicked
-- [ ] Include text area for comment
-- [ ] Add "Submit" and "Cancel" buttons
-- [ ] Close modal on submit or cancel
-- [ ] Allow submitting without comment (optional text)
+- [x] Create modal/popup component in HTML/CSS
+- [x] Trigger modal when thumbs down is clicked
+- [x] Include text area for comment
+- [x] Add "Submit" and "Cancel" buttons
+- [x] Close modal on submit or cancel
+- [x] Allow submitting without comment (optional text)
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M3.4 - Feedback submission via Pi extension

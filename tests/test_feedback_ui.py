@@ -102,6 +102,114 @@ class TestFeedbackStylesInCSS:
         assert "accent-error" in styles_css_content
 
 
+class TestFeedbackModalInHTML:
+    """Test that index.html contains feedback modal markup."""
+
+    @pytest.fixture
+    def index_html_content(self):
+        with open("frontend/index.html", "r") as f:
+            return f.read()
+
+    def test_has_feedback_modal(self, index_html_content):
+        """Verify feedback modal element exists."""
+        assert 'id="feedbackModal"' in index_html_content
+
+    def test_has_feedback_comment_textarea(self, index_html_content):
+        """Verify comment textarea exists."""
+        assert 'id="feedbackComment"' in index_html_content
+
+    def test_has_modal_close_button(self, index_html_content):
+        """Verify close button exists."""
+        assert 'id="feedbackModalClose"' in index_html_content
+
+    def test_has_modal_cancel_button(self, index_html_content):
+        """Verify cancel button exists."""
+        assert 'id="feedbackModalCancel"' in index_html_content
+
+    def test_has_modal_submit_button(self, index_html_content):
+        """Verify submit button exists."""
+        assert 'id="feedbackModalSubmit"' in index_html_content
+
+    def test_modal_hidden_by_default(self, index_html_content):
+        """Verify modal is hidden by default."""
+        assert 'id="feedbackModal" hidden' in index_html_content
+
+
+class TestFeedbackModalInJS:
+    """Test that app.js contains feedback modal functionality."""
+
+    @pytest.fixture
+    def app_js_content(self):
+        with open("frontend/app.js", "r") as f:
+            return f.read()
+
+    def test_has_open_feedback_modal(self, app_js_content):
+        """Verify openFeedbackModal function exists."""
+        assert "function openFeedbackModal" in app_js_content
+
+    def test_has_close_feedback_modal(self, app_js_content):
+        """Verify closeFeedbackModal function exists."""
+        assert "function closeFeedbackModal" in app_js_content
+
+    def test_has_submit_feedback_modal(self, app_js_content):
+        """Verify submitFeedbackModal function exists."""
+        assert "function submitFeedbackModal" in app_js_content
+
+    def test_has_setup_feedback_modal_listeners(self, app_js_content):
+        """Verify setupFeedbackModalListeners function exists."""
+        assert "function setupFeedbackModalListeners" in app_js_content
+
+    def test_modal_context_in_state(self, app_js_content):
+        """Verify feedbackModalContext is in state."""
+        assert "feedbackModalContext" in app_js_content
+
+    def test_escape_key_closes_modal(self, app_js_content):
+        """Verify Escape key handler exists."""
+        assert "e.key === 'Escape'" in app_js_content
+
+    def test_ctrl_enter_submits(self, app_js_content):
+        """Verify Ctrl+Enter submit handler exists."""
+        assert "e.ctrlKey || e.metaKey" in app_js_content
+
+
+class TestFeedbackModalInCSS:
+    """Test that styles.css contains feedback modal styles."""
+
+    @pytest.fixture
+    def styles_css_content(self):
+        with open("frontend/styles.css", "r") as f:
+            return f.read()
+
+    def test_has_modal_overlay_class(self, styles_css_content):
+        """Verify .modal-overlay styles exist."""
+        assert ".modal-overlay" in styles_css_content
+
+    def test_has_modal_class(self, styles_css_content):
+        """Verify .modal styles exist."""
+        assert ".modal {" in styles_css_content
+
+    def test_has_modal_header_class(self, styles_css_content):
+        """Verify .modal-header styles exist."""
+        assert ".modal-header" in styles_css_content
+
+    def test_has_modal_body_class(self, styles_css_content):
+        """Verify .modal-body styles exist."""
+        assert ".modal-body" in styles_css_content
+
+    def test_has_modal_footer_class(self, styles_css_content):
+        """Verify .modal-footer styles exist."""
+        assert ".modal-footer" in styles_css_content
+
+    def test_has_modal_btn_classes(self, styles_css_content):
+        """Verify modal button styles exist."""
+        assert ".modal-btn-primary" in styles_css_content
+        assert ".modal-btn-secondary" in styles_css_content
+
+    def test_modal_has_animation(self, styles_css_content):
+        """Verify modal has entrance animation."""
+        assert "@keyframes modalIn" in styles_css_content
+
+
 class TestFeedbackButtonsServedViaAPI:
     """Test that feedback UI is accessible via the web server."""
 

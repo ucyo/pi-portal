@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added negative feedback modal with optional comment textarea
 * Added thumbs up/down feedback buttons on assistant messages
 * Added visual indicator for active session (green dot + left border)
 * Simplified session state management (2 variables instead of 3)

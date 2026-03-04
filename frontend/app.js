@@ -32,7 +32,9 @@ const state = {
     sessions: [],
     activeSessionId: null,    // Session Pi is working in (can send messages)
     viewingSessionId: null,   // Session currently displayed (null = welcome)
-    sessionRefreshPending: false
+    sessionRefreshPending: false,
+    // Feedback modal state
+    feedbackModalContext: null  // {timestamp, feedbackContainer, thumbsDownBtn}
 };
 
 /**
@@ -55,7 +57,13 @@ const elements = {
     welcomeContainer: document.getElementById('welcomeContainer'),
     promptGrid: document.getElementById('promptGrid'),
     newSessionBtn: document.getElementById('newSessionBtn'),
-    sessionList: document.getElementById('sessionList')
+    sessionList: document.getElementById('sessionList'),
+    // Feedback modal
+    feedbackModal: document.getElementById('feedbackModal'),
+    feedbackComment: document.getElementById('feedbackComment'),
+    feedbackModalClose: document.getElementById('feedbackModalClose'),
+    feedbackModalCancel: document.getElementById('feedbackModalCancel'),
+    feedbackModalSubmit: document.getElementById('feedbackModalSubmit')
 };
 
 // ============================================
@@ -467,6 +475,7 @@ function addFeedbackButtons(messageElement, timestamp = null, feedback = null) {
 function setupFeedbackHandlers(feedbackContainer) {
     const thumbsUp = feedbackContainer.querySelector('.thumbs-up');
     const thumbsDown = feedbackContainer.querySelector('.thumbs-down');
+    const timestamp = feedbackContainer.dataset.timestamp || null;
     
     thumbsUp.addEventListener('click', () => {
         const isActive = thumbsUp.classList.contains('active');
@@ -478,11 +487,102 @@ function setupFeedbackHandlers(feedbackContainer) {
     
     thumbsDown.addEventListener('click', () => {
         const isActive = thumbsDown.classList.contains('active');
-        // Toggle off if already active, otherwise set to negative
-        thumbsDown.classList.toggle('active', !isActive);
+        if (isActive) {
+            // Toggle off if already active
+            thumbsDown.classList.remove('active');
+            // TODO: M3.4 will send feedback to Pi (rating: 0)
+        } else {
+            // Open modal for negative feedback
+            openFeedbackModal(timestamp, feedbackContainer, thumbsDown);
+        }
+    });
+}
+
+// ============================================
+// Feedback Modal
+// ============================================
+
+/**
+ * Open the feedback modal for negative feedback.
+ */
+function openFeedbackModal(timestamp, feedbackContainer, thumbsDownBtn) {
+    state.feedbackModalContext = { timestamp, feedbackContainer, thumbsDownBtn };
+    
+    // Clear previous comment
+    elements.feedbackComment.value = '';
+    
+    // Show modal
+    elements.feedbackModal.hidden = false;
+    
+    // Focus the textarea
+    setTimeout(() => elements.feedbackComment.focus(), 100);
+}
+
+/**
+ * Close the feedback modal.
+ */
+function closeFeedbackModal() {
+    elements.feedbackModal.hidden = true;
+    state.feedbackModalContext = null;
+}
+
+/**
+ * Submit feedback from the modal.
+ */
+function submitFeedbackModal() {
+    const context = state.feedbackModalContext;
+    if (!context) return;
+    
+    const comment = elements.feedbackComment.value.trim() || null;
+    
+    // Update UI state
+    context.thumbsDownBtn.classList.add('active');
+    const thumbsUp = context.feedbackContainer.querySelector('.thumbs-up');
+    if (thumbsUp) {
         thumbsUp.classList.remove('active');
-        // TODO: M3.3 will open modal for comment
-        // TODO: M3.4 will send feedback to Pi
+    }
+    
+    // Store comment on the feedback container for later submission
+    context.feedbackContainer.dataset.comment = comment || '';
+    
+    // TODO: M3.4 will send feedback to Pi
+    
+    closeFeedbackModal();
+}
+
+/**
+ * Setup feedback modal event listeners.
+ */
+function setupFeedbackModalListeners() {
+    // Close button
+    elements.feedbackModalClose.addEventListener('click', closeFeedbackModal);
+    
+    // Cancel button
+    elements.feedbackModalCancel.addEventListener('click', closeFeedbackModal);
+    
+    // Submit button
+    elements.feedbackModalSubmit.addEventListener('click', submitFeedbackModal);
+    
+    // Close on overlay click
+    elements.feedbackModal.addEventListener('click', (e) => {
+        if (e.target === elements.feedbackModal) {
+            closeFeedbackModal();
+        }
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !elements.feedbackModal.hidden) {
+            closeFeedbackModal();
+        }
+    });
+    
+    // Submit on Ctrl+Enter
+    elements.feedbackComment.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            submitFeedbackModal();
+        }
     });
 }
 
@@ -1150,6 +1250,7 @@ function init() {
     console.log('Pi Portal initializing...');
     
     setupEventListeners();
+    setupFeedbackModalListeners();
     loadStarterPrompts();
     loadSessions();
     connect();

@@ -403,6 +403,137 @@ async def process_new_session(websocket: WebSocket) -> None:
         )
 
 
+async def process_feedback(websocket: WebSocket, data: dict) -> None:
+    """Submit feedback directly to the session file.
+
+    Always writes directly to the session JSONL file to ensure feedback
+    goes to the correct session (avoids issues with Pi's current session).
+
+    Args:
+        websocket: The WebSocket to send responses to.
+        data: Feedback data containing targetTimestamp, rating, sessionId, and optional comment.
+    """
+    target_timestamp = data.get("targetTimestamp")
+    rating = data.get("rating")
+    comment = data.get("comment")
+    session_id = data.get("sessionId")
+
+    if target_timestamp is None or rating is None:
+        await manager.send_message(
+            websocket,
+            {
+                "type": "error",
+                "message": "Feedback requires targetTimestamp and rating",
+            },
+        )
+        return
+
+    if not session_id:
+        await manager.send_message(
+            websocket,
+            {
+                "type": "error",
+                "message": "Feedback requires sessionId",
+            },
+        )
+        return
+
+    logger.info(
+        f"[WS] Processing feedback: session={session_id}, timestamp={target_timestamp}, rating={rating}"
+    )
+
+    # Always write directly to the session file
+    await _write_feedback_to_session_file(
+        websocket, session_id, target_timestamp, rating, comment
+    )
+
+
+async def _write_feedback_to_session_file(
+    websocket: WebSocket,
+    session_id: str,
+    target_timestamp: int,
+    rating: int,
+    comment: str | None,
+) -> None:
+    """Write feedback directly to a session JSONL file.
+
+    Args:
+        websocket: The WebSocket to send responses to.
+        session_id: The session ID to write to.
+        target_timestamp: The message timestamp being rated.
+        rating: The rating (-1, 0, or 1).
+        comment: Optional comment for negative feedback.
+    """
+    import json
+    import time
+    import uuid
+
+    # Find the session file
+    session_file = None
+    if SESSIONS_PATH.exists():
+        for path in SESSIONS_PATH.glob(f"*_{session_id}.jsonl"):
+            session_file = path
+            break
+
+    if not session_file or not session_file.exists():
+        await manager.send_message(
+            websocket,
+            {"type": "error", "message": f"Session not found: {session_id}"},
+        )
+        return
+
+    try:
+        # Read the file to get the last entry's ID for parentId
+        last_entry_id = None
+        with open(session_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        entry = json.loads(line)
+                        if entry.get("id"):
+                            last_entry_id = entry["id"]
+                    except json.JSONDecodeError:
+                        continue
+
+        # Build the custom feedback entry (same format as Pi extension)
+        entry = {
+            "type": "custom",
+            "customType": "pi-portal-feedback",
+            "id": str(uuid.uuid4()),
+            "parentId": last_entry_id,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
+            "data": {
+                "targetTimestamp": target_timestamp,
+                "rating": rating,
+                "comment": comment if rating == -1 else None,
+                "timestamp": int(time.time() * 1000),
+            },
+        }
+
+        # Append to the session file
+        with open(session_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+
+        logger.info(f"[WS] Feedback written to session file: {session_file.name}")
+
+        await manager.send_message(
+            websocket,
+            {
+                "type": "feedback_saved",
+                "targetTimestamp": target_timestamp,
+                "rating": rating,
+            },
+        )
+
+    except Exception as e:
+        logger.exception(f"Error writing feedback to session file: {e}")
+        await manager.send_message(
+            websocket,
+            {"type": "error", "message": f"Failed to save feedback: {e}"},
+        )
+
+
 async def websocket_endpoint(websocket: WebSocket) -> None:
     """
     Handle WebSocket connections for chat.
@@ -410,11 +541,13 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     Message protocol:
     - Client sends: {"type": "message", "content": "user message"}
     - Client sends: {"type": "new_session"}
+    - Client sends: {"type": "feedback", "targetTimestamp": 123, "rating": 1, "comment": null}
     - Server sends: {"type": "text_delta", "delta": "..."}  (streaming)
     - Server sends: {"type": "message_complete", "role": "assistant", "content": "..."}
     - Server sends: {"type": "tool_start", "tool": "tool_name"}
     - Server sends: {"type": "tool_result", "tool": "tool_name", "success": true}
     - Server sends: {"type": "new_session_created", "session_id": "..."}
+    - Server sends: {"type": "feedback_saved", "targetTimestamp": 123, "rating": 1}
     - Server sends: {"type": "status", "status": "connected" | "processing" | "ready"}
     - Server sends: {"type": "error", "message": "error description"}
     """
@@ -443,6 +576,11 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 await manager.send_message(
                     websocket, {"type": "status", "status": "ready"}
                 )
+                continue
+
+            if data.get("type") == "feedback":
+                # Handle feedback submission
+                await process_feedback(websocket, data)
                 continue
 
             if data.get("type") == "message":

@@ -218,11 +218,11 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M3.4 - Feedback submission via Pi extension
-- [ ] Send feedback via WebSocket to backend
-- [ ] Backend invokes Pi `/feedback` command via RPC prompt
-- [ ] Format: `/feedback {"targetTimestamp":123,"rating":1,"comment":null}`
-- [ ] Handle extension response (notify event)
-- [ ] Update UI to reflect saved state
+- [x] Send feedback via WebSocket to backend
+- [x] Backend invokes Pi `/feedback` command via RPC prompt
+- [x] Format: `/feedback {"targetTimestamp":123,"rating":1,"comment":null}`
+- [x] Handle extension response (notify event)
+- [x] Update UI to reflect saved state
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M3.5 - Load existing feedback

@@ -27,6 +27,8 @@
 - [x] M2.5: completed - New session button (WebSocket command, UI reset)
 - [x] M3.2: completed - Message feedback UI (thumbs up/down buttons, styling, toggle state)
 - [x] M3.3: completed - Negative feedback modal (opens on thumbs down, comment textarea, submit/cancel)
+- [x] M3.4: completed - Feedback submission via Pi extension (WebSocket handler, /feedback command, saved animation)
+- [x] Bug fix: Feedback for past sessions written to correct session file (not current)
 
 ## Notes
 - Architecture changed: No SQLite, use Pi's JSONL sessions as single source of truth

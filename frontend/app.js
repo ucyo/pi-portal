@@ -173,6 +173,9 @@ function handleMessage(event) {
             case 'new_session_created':
                 handleNewSessionCreated(data);
                 break;
+            case 'feedback_saved':
+                handleFeedbackSaved(data);
+                break;
             default:
                 console.log('Unhandled message type:', data.type);
         }
@@ -470,6 +473,39 @@ function addFeedbackButtons(messageElement, timestamp = null, feedback = null) {
 }
 
 /**
+ * Send feedback to the server via WebSocket.
+ */
+function sendFeedback(targetTimestamp, rating, comment = null) {
+    if (!state.connected) {
+        console.error('Cannot send feedback: not connected');
+        return;
+    }
+    
+    if (!targetTimestamp) {
+        console.error('Cannot send feedback: no timestamp');
+        return;
+    }
+    
+    // Convert timestamp to number if it's a string
+    const timestamp = typeof targetTimestamp === 'string' 
+        ? parseInt(targetTimestamp, 10) 
+        : targetTimestamp;
+    
+    // Include session ID so backend knows which session file to update
+    const sessionId = state.viewingSessionId || state.activeSessionId;
+    
+    console.log('Sending feedback:', { sessionId, targetTimestamp: timestamp, rating, comment });
+    
+    state.ws.send(JSON.stringify({
+        type: 'feedback',
+        sessionId: sessionId,
+        targetTimestamp: timestamp,
+        rating: rating,
+        comment: comment
+    }));
+}
+
+/**
  * Setup click handlers for feedback buttons.
  */
 function setupFeedbackHandlers(feedbackContainer) {
@@ -480,17 +516,20 @@ function setupFeedbackHandlers(feedbackContainer) {
     thumbsUp.addEventListener('click', () => {
         const isActive = thumbsUp.classList.contains('active');
         // Toggle off if already active, otherwise set to positive
+        const newRating = isActive ? 0 : 1;
         thumbsUp.classList.toggle('active', !isActive);
         thumbsDown.classList.remove('active');
-        // TODO: M3.4 will send feedback to Pi
+        
+        // Send feedback to Pi
+        sendFeedback(timestamp, newRating, null);
     });
     
     thumbsDown.addEventListener('click', () => {
         const isActive = thumbsDown.classList.contains('active');
         if (isActive) {
-            // Toggle off if already active
+            // Toggle off if already active - clear feedback
             thumbsDown.classList.remove('active');
-            // TODO: M3.4 will send feedback to Pi (rating: 0)
+            sendFeedback(timestamp, 0, null);
         } else {
             // Open modal for negative feedback
             openFeedbackModal(timestamp, feedbackContainer, thumbsDown);
@@ -534,6 +573,7 @@ function submitFeedbackModal() {
     if (!context) return;
     
     const comment = elements.feedbackComment.value.trim() || null;
+    const timestamp = context.timestamp;
     
     // Update UI state
     context.thumbsDownBtn.classList.add('active');
@@ -542,10 +582,11 @@ function submitFeedbackModal() {
         thumbsUp.classList.remove('active');
     }
     
-    // Store comment on the feedback container for later submission
+    // Store comment on the feedback container
     context.feedbackContainer.dataset.comment = comment || '';
     
-    // TODO: M3.4 will send feedback to Pi
+    // Send negative feedback to Pi
+    sendFeedback(timestamp, -1, comment);
     
     closeFeedbackModal();
 }
@@ -1041,9 +1082,24 @@ function displaySession(session) {
         elements.chatMessages.appendChild(banner);
     }
     
+    // Build a map of feedback by target timestamp (use most recent feedback)
+    const feedbackByTimestamp = {};
+    if (session.feedback && Array.isArray(session.feedback)) {
+        for (const fb of session.feedback) {
+            const ts = fb.target_timestamp;
+            // Keep the most recent feedback for each timestamp
+            if (!feedbackByTimestamp[ts] || fb.timestamp > feedbackByTimestamp[ts].timestamp) {
+                feedbackByTimestamp[ts] = fb;
+            }
+        }
+    }
+    
     // Display all messages
     for (const msg of session.messages) {
-        appendHistoryMessage(msg.role, msg.content, msg.timestamp);
+        // Look up feedback for this message (using message_timestamp, which is the Unix ms timestamp)
+        const msgTs = msg.message_timestamp;
+        const feedback = msgTs ? feedbackByTimestamp[msgTs] : null;
+        appendHistoryMessage(msg.role, msg.content, msg.message_timestamp, feedback);
     }
     
     // Update sidebar highlight and input state
@@ -1128,6 +1184,31 @@ function requestNewSession() {
     }
     
     state.ws.send(JSON.stringify({ type: 'new_session' }));
+}
+
+/**
+ * Handle feedback saved confirmation.
+ */
+function handleFeedbackSaved(data) {
+    console.log('Feedback saved:', data);
+    
+    // Find the feedback container with this timestamp and add saved indicator
+    const timestamp = data.targetTimestamp;
+    if (!timestamp) return;
+    
+    const feedbackContainer = document.querySelector(
+        `.message-feedback[data-timestamp="${timestamp}"]`
+    );
+    
+    if (feedbackContainer) {
+        // Add a brief visual confirmation (saved indicator)
+        feedbackContainer.classList.add('saved');
+        
+        // Remove the saved class after animation
+        setTimeout(() => {
+            feedbackContainer.classList.remove('saved');
+        }, 1500);
+    }
 }
 
 /**

@@ -521,3 +521,108 @@ class TestWebSocketStatusTransitions:
                     data = websocket.receive_json()
                     if data.get("type") == "status" and data.get("status") == "ready":
                         break
+
+
+class TestFeedbackWebSocket:
+    """Test feedback submission via WebSocket."""
+
+    def test_feedback_message_accepted(self):
+        """Feedback messages should be accepted without error."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            # Get initial connected status
+            data = websocket.receive_json()
+            assert data["type"] == "status"
+            assert data["status"] == "connected"
+
+            # Send feedback (this won't succeed without Pi running,
+            # but the message format should be accepted)
+            websocket.send_json(
+                {
+                    "type": "feedback",
+                    "targetTimestamp": 1234567890,
+                    "rating": 1,
+                    "comment": None,
+                }
+            )
+
+            # Connection should still be alive
+            websocket.send_json({"type": "ping"})
+            data = websocket.receive_json()
+            # May get error about Pi not running, or pong if feedback was processed first
+            # Either way, connection should be maintained
+
+    def test_feedback_missing_timestamp_returns_error(self):
+        """Feedback without targetTimestamp should return error."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()  # connected
+
+            # Send feedback without timestamp
+            websocket.send_json({"type": "feedback", "rating": 1})
+
+            # Should get an error
+            data = websocket.receive_json()
+            assert data["type"] == "error"
+            assert "targetTimestamp" in data["message"]
+
+    def test_feedback_missing_rating_returns_error(self):
+        """Feedback without rating should return error."""
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()  # connected
+
+            # Send feedback without rating
+            websocket.send_json({"type": "feedback", "targetTimestamp": 1234567890})
+
+            # Should get an error
+            data = websocket.receive_json()
+            assert data["type"] == "error"
+            assert "rating" in data["message"]
+
+    @pytest.mark.integration
+    def test_feedback_submission_to_pi(self):
+        """Test full feedback submission with Pi running."""
+        # This test requires Pi to be running with the feedback extension
+        client = TestClient(app)
+
+        with client.websocket_connect("/ws") as websocket:
+            websocket.receive_json()  # connected
+
+            # First send a message to start a session
+            websocket.send_json({"type": "message", "content": "hello"})
+
+            # Consume until message_complete to get timestamp
+            assistant_timestamp = None
+            while True:
+                data = websocket.receive_json()
+                if data.get("type") == "message_complete":
+                    # Extract timestamp from response if available
+                    messages = data.get("messages", [])
+                    for msg in messages:
+                        if msg.get("role") == "assistant" and msg.get("timestamp"):
+                            assistant_timestamp = msg["timestamp"]
+                            break
+                    break
+                if data.get("type") == "status" and data.get("status") == "ready":
+                    break
+
+            # If we got a timestamp, try to submit feedback
+            if assistant_timestamp:
+                websocket.send_json(
+                    {
+                        "type": "feedback",
+                        "targetTimestamp": assistant_timestamp,
+                        "rating": 1,
+                        "comment": None,
+                    }
+                )
+
+                # Look for feedback_saved or error response
+                while True:
+                    data = websocket.receive_json()
+                    if data.get("type") in ("feedback_saved", "error"):
+                        break

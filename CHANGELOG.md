@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fixed feedback for past sessions being written to wrong session file
+* Fixed feedback display showing first entry instead of most recent
 * Added negative feedback modal with optional comment textarea
 * Added thumbs up/down feedback buttons on assistant messages
 * Added visual indicator for active session (green dot + left border)

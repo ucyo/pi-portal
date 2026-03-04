@@ -27,7 +27,11 @@ const state = {
     // Streaming message state
     currentMessageElement: null,
     currentMessageContent: '',
-    currentThinkingContent: ''
+    currentThinkingContent: '',
+    // Session state
+    sessions: [],
+    currentSessionId: null,
+    sessionRefreshPending: false
 };
 
 // ============================================
@@ -41,7 +45,8 @@ const elements = {
     sendBtn: document.getElementById('sendBtn'),
     welcomeContainer: document.getElementById('welcomeContainer'),
     promptGrid: document.getElementById('promptGrid'),
-    newSessionBtn: document.getElementById('newSessionBtn')
+    newSessionBtn: document.getElementById('newSessionBtn'),
+    sessionList: document.getElementById('sessionList')
 };
 
 // ============================================
@@ -296,6 +301,14 @@ function handleMessageComplete(data) {
         // No streaming happened, just show the complete message
         appendMessage('assistant', data.content);
     }
+    
+    // Update session ID if provided
+    if (data.session_id) {
+        state.currentSessionId = data.session_id;
+    }
+    
+    // Refresh session list (new session may have been created)
+    scheduleSessionRefresh();
 }
 
 /**
@@ -654,6 +667,142 @@ async function loadStarterPrompts() {
 }
 
 // ============================================
+// Session List
+// ============================================
+
+/**
+ * Load sessions from the API.
+ */
+async function loadSessions() {
+    try {
+        const response = await fetch('/api/sessions');
+        const data = await response.json();
+        
+        if (data.sessions) {
+            state.sessions = data.sessions;
+            renderSessionList();
+        }
+    } catch (error) {
+        console.error('Error loading sessions:', error);
+    }
+}
+
+/**
+ * Render the session list in the sidebar.
+ */
+function renderSessionList() {
+    if (!elements.sessionList) return;
+    
+    if (state.sessions.length === 0) {
+        elements.sessionList.innerHTML = `
+            <div class="session-list-empty">
+                <p>No sessions yet</p>
+                <p class="hint">Start a conversation below</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const sessionItems = state.sessions.map(session => {
+        const isActive = session.id === state.currentSessionId;
+        const date = formatSessionDate(session.timestamp);
+        const messageCount = session.message_count || 0;
+        
+        return `
+            <div class="session-item${isActive ? ' active' : ''}" 
+                 data-session-id="${escapeHtml(session.id)}"
+                 title="${escapeHtml(session.display_name)}">
+                <div class="session-item-title">${escapeHtml(session.display_name)}</div>
+                <div class="session-item-meta">
+                    <span class="session-item-date">${date}</span>
+                    <span class="session-item-count">${messageCount} msgs</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    elements.sessionList.innerHTML = sessionItems;
+    
+    // Add click handlers
+    elements.sessionList.querySelectorAll('.session-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const sessionId = item.dataset.sessionId;
+            handleSessionClick(sessionId);
+        });
+    });
+}
+
+/**
+ * Format session timestamp for display.
+ */
+function formatSessionDate(timestamp) {
+    if (!timestamp) return '';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    // Today: show time only
+    if (diffDays === 0) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // Yesterday
+    if (diffDays === 1) {
+        return 'Yesterday';
+    }
+    
+    // Within a week: show day name
+    if (diffDays < 7) {
+        return date.toLocaleDateString([], { weekday: 'short' });
+    }
+    
+    // Older: show date
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+/**
+ * Handle click on a session in the sidebar.
+ */
+function handleSessionClick(sessionId) {
+    // For now, just highlight the session (viewing will be in M2.4)
+    setActiveSession(sessionId);
+    console.log('Session clicked:', sessionId, '- viewing will be implemented in M2.4');
+}
+
+/**
+ * Set the currently active session and update UI.
+ */
+function setActiveSession(sessionId) {
+    state.currentSessionId = sessionId;
+    
+    // Update active state in UI
+    elements.sessionList.querySelectorAll('.session-item').forEach(item => {
+        if (item.dataset.sessionId === sessionId) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+/**
+ * Schedule a session list refresh (debounced).
+ */
+function scheduleSessionRefresh() {
+    if (state.sessionRefreshPending) return;
+    
+    state.sessionRefreshPending = true;
+    
+    // Delay refresh to allow Pi to finish saving
+    setTimeout(async () => {
+        state.sessionRefreshPending = false;
+        await loadSessions();
+    }, 1000);
+}
+
+// ============================================
 // Input Handling
 // ============================================
 
@@ -719,6 +868,7 @@ function init() {
     
     setupEventListeners();
     loadStarterPrompts();
+    loadSessions();
     connect();
     
     // Initial state

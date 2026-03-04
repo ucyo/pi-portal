@@ -22,7 +22,7 @@
 - [x] M2.2: completed - Session list API (GET /api/sessions)
 - [x] M3.1: completed - Pi feedback extension (.pi/extensions/feedback.ts)
 - [x] Bug fix: WebSocket hanging on slash commands without content
-- [ ] M2.3: not started - Sidebar session list
+- [x] M2.3: completed - Sidebar session list (fetch, render, highlight, auto-refresh)
 
 ## Notes
 - Architecture changed: No SQLite, use Pi's JSONL sessions as single source of truth

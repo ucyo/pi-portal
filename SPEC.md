@@ -157,11 +157,11 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M2.3 - Sidebar session list
-- [ ] Fetch session list from API on page load
-- [ ] Render sessions in sidebar
-- [ ] Display session title and date
-- [ ] Highlight currently active session
-- [ ] Auto-refresh list when new session created
+- [x] Fetch session list from API on page load
+- [x] Render sessions in sidebar
+- [x] Display session title and date
+- [x] Highlight currently active session
+- [x] Auto-refresh list when new session created
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M2.4 - View past session

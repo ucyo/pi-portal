@@ -30,12 +30,18 @@ const state = {
     currentThinkingContent: '',
     // Session state
     sessions: [],
-    currentSessionId: null,        // Session we're currently viewing
-    piActiveSessionId: null,       // Session Pi is actively using (can send messages to)
-    sessionRefreshPending: false,
-    // Read-only mode for viewing past sessions
-    isViewingPastSession: false
+    activeSessionId: null,    // Session Pi is working in (can send messages)
+    viewingSessionId: null,   // Session currently displayed (null = welcome)
+    sessionRefreshPending: false
 };
+
+/**
+ * Check if we're viewing a past (read-only) session.
+ */
+function isViewingPastSession() {
+    return state.viewingSessionId !== null && 
+           state.viewingSessionId !== state.activeSessionId;
+}
 
 // ============================================
 // DOM Elements
@@ -308,10 +314,10 @@ function handleMessageComplete(data) {
         appendMessage('assistant', data.content);
     }
     
-    // Update session ID if provided - this is the session Pi is actively using
+    // Update session ID if provided
     if (data.session_id) {
-        state.piActiveSessionId = data.session_id;
-        state.currentSessionId = data.session_id;
+        state.activeSessionId = data.session_id;
+        state.viewingSessionId = data.session_id;
     }
     
     // Refresh session list (new session may have been created)
@@ -499,13 +505,13 @@ function updateConnectionStatus(status) {
  * Update input field state based on connection and processing state.
  */
 function updateInputState() {
-    const isReadOnly = state.isViewingPastSession;
-    const canSend = state.connected && !state.isProcessing && !isReadOnly && elements.chatInput.value.trim();
+    const readOnly = isViewingPastSession();
+    const canSend = state.connected && !state.isProcessing && !readOnly && elements.chatInput.value.trim();
     
     elements.sendBtn.disabled = !canSend;
-    elements.chatInput.disabled = !state.connected || state.isProcessing || isReadOnly;
+    elements.chatInput.disabled = !state.connected || state.isProcessing || readOnly;
     
-    if (isReadOnly) {
+    if (readOnly) {
         elements.chatInput.placeholder = 'Viewing past session (read-only)';
     } else if (state.isProcessing) {
         elements.chatInput.placeholder = 'Pi is thinking...';
@@ -715,12 +721,17 @@ function renderSessionList() {
     }
     
     const sessionItems = state.sessions.map(session => {
-        const isActive = session.id === state.currentSessionId;
+        const isViewing = session.id === state.viewingSessionId;
+        const isLive = session.id === state.activeSessionId;
         const date = formatSessionDate(session.timestamp);
         const messageCount = session.message_count || 0;
         
+        const classes = ['session-item'];
+        if (isViewing) classes.push('active');
+        if (isLive) classes.push('live');
+        
         return `
-            <div class="session-item${isActive ? ' active' : ''}" 
+            <div class="${classes.join(' ')}" 
                  data-session-id="${escapeHtml(session.id)}"
                  title="${escapeHtml(session.display_name)}">
                 <div class="session-item-title">${escapeHtml(session.display_name)}</div>
@@ -778,11 +789,10 @@ function formatSessionDate(timestamp) {
  */
 async function handleSessionClick(sessionId) {
     // Don't reload if already viewing this session
-    if (sessionId === state.currentSessionId && state.isViewingPastSession) {
+    if (sessionId === state.viewingSessionId) {
         return;
     }
     
-    setActiveSession(sessionId);
     await loadSession(sessionId);
 }
 
@@ -814,12 +824,8 @@ async function loadSession(sessionId) {
  * Otherwise, show it as read-only.
  */
 function displaySession(session) {
-    // Check if this is the active session Pi is using
-    const isActiveSession = session.id === state.piActiveSessionId;
-    
-    // Set state
-    state.isViewingPastSession = !isActiveSession;
-    state.currentSessionId = session.id;
+    // Update viewing state
+    state.viewingSessionId = session.id;
     state.chatStarted = true;
     
     // Clear chat area
@@ -830,8 +836,8 @@ function displaySession(session) {
         elements.welcomeContainer.style.display = 'none';
     }
     
-    // Add read-only banner only for past sessions
-    if (!isActiveSession) {
+    // Add read-only banner for past sessions
+    if (isViewingPastSession()) {
         const banner = document.createElement('div');
         banner.className = 'read-only-banner';
         banner.innerHTML = `
@@ -846,7 +852,8 @@ function displaySession(session) {
         appendHistoryMessage(msg.role, msg.content, msg.timestamp);
     }
     
-    // Update input state
+    // Update sidebar highlight and input state
+    highlightSession(session.id);
     updateInputState();
     
     scrollToBottom();
@@ -888,18 +895,13 @@ function appendHistoryMessage(role, content, timestamp) {
 }
 
 /**
- * Set the currently active session and update UI.
+ * Highlight a session in the sidebar.
  */
-function setActiveSession(sessionId) {
-    state.currentSessionId = sessionId;
+function highlightSession(sessionId) {
+    if (!elements.sessionList) return;
     
-    // Update active state in UI
     elements.sessionList.querySelectorAll('.session-item').forEach(item => {
-        if (item.dataset.sessionId === sessionId) {
-            item.classList.add('active');
-        } else {
-            item.classList.remove('active');
-        }
+        item.classList.toggle('active', item.dataset.sessionId === sessionId);
     });
 }
 
@@ -935,12 +937,12 @@ function requestNewSession() {
 function handleNewSessionCreated(data) {
     console.log('New session created:', data.session_id);
     
+    // Update session state - new session is both active and being viewed
+    state.activeSessionId = data.session_id;
+    state.viewingSessionId = null;  // Will be set when first message is sent
+    
     // Reset UI to initial state
     resetChatUI();
-    
-    // Update session IDs - this is now the active session
-    state.piActiveSessionId = data.session_id;
-    state.currentSessionId = data.session_id;
     
     // Refresh session list
     scheduleSessionRefresh();
@@ -950,19 +952,15 @@ function handleNewSessionCreated(data) {
  * Reset the chat UI to initial state.
  */
 function resetChatUI() {
-    // Exit read-only mode
-    state.isViewingPastSession = false;
+    // Reset state
     state.chatStarted = false;
-    state.currentSessionId = null;
+    state.viewingSessionId = null;
     
     // Clear any streaming state
     finalizeStreamingMessage();
     
-    // Clear chat messages
-    elements.chatMessages.innerHTML = '';
-    
-    // Re-add welcome container
-    const welcomeHtml = `
+    // Clear chat messages and show welcome
+    elements.chatMessages.innerHTML = `
         <div class="welcome-container" id="welcomeContainer">
             <div class="welcome-header">
                 <h1>Welcome to Pi Portal</h1>
@@ -977,24 +975,15 @@ function resetChatUI() {
             </div>
         </div>
     `;
-    elements.chatMessages.innerHTML = welcomeHtml;
     
     // Update element references
     elements.welcomeContainer = document.getElementById('welcomeContainer');
     elements.promptGrid = document.getElementById('promptGrid');
     
-    // Reload starter prompts
+    // Reload starter prompts and update UI
     loadStarterPrompts();
-    
-    // Update input state
+    highlightSession(null);
     updateInputState();
-    
-    // Clear active session highlight
-    if (elements.sessionList) {
-        elements.sessionList.querySelectorAll('.session-item').forEach(item => {
-            item.classList.remove('active');
-        });
-    }
 }
 
 // ============================================

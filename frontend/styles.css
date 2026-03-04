@@ -194,6 +194,7 @@ kbd {
     cursor: pointer;
     transition: background var(--transition-fast);
     margin-bottom: 4px;
+    position: relative;
 }
 
 .session-item:hover {
@@ -204,6 +205,27 @@ kbd {
     background: var(--bg-active);
 }
 
+.session-item.live {
+    border-left: 3px solid var(--accent-success);
+    padding-left: 9px;
+}
+
+.session-item.live .session-item-title::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--accent-success);
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 .session-item-title {
     font-size: 0.9rem;
     font-weight: 500;
@@ -212,6 +234,8 @@ kbd {
     overflow: hidden;
     text-overflow: ellipsis;
     margin-bottom: 4px;
+    display: flex;
+    align-items: center;
 }
 
 .session-item-meta {

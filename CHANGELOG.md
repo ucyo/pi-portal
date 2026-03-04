@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Added visual indicator for active session (green dot + left border)
+* Simplified session state management (2 variables instead of 3)
 * Added "New Session" button to start fresh conversation
 * Added WebSocket new_session command to create new Pi session
 * Added UI reset when starting new session (clears chat, shows welcome)

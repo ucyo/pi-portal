@@ -22,3 +22,4 @@
 * Added WebSocket endpoint for real-time chat communication
 * Added frontend WebSocket client with auto-reconnect and connection status display
 * Fixed WebSocket handler to gracefully handle malformed messages (null content, unknown types)
+* Fixed WebSocket hanging when slash commands return no content (e.g., `/feedback` without arguments)

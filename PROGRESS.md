@@ -20,6 +20,7 @@
 
 - [ ] M2.1: not started - Session file parser
 - [x] M3.1: completed - Pi feedback extension (.pi/extensions/feedback.ts)
+- [x] Bug fix: WebSocket hanging on slash commands without content
 
 ## Notes
 - Architecture changed: No SQLite, use Pi's JSONL sessions as single source of truth

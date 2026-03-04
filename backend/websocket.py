@@ -147,8 +147,11 @@ async def process_pi_message(
         # Send prompt to Pi
         await client.send_command({"type": "prompt", "message": content})
 
-        # Track accumulated response
+        # Track accumulated response and command state
         full_response = ""
+        got_response = False
+        got_content = False
+        is_command = content.startswith("/")
 
         # Stream events from Pi
         async for event in client.read_events():
@@ -159,6 +162,7 @@ async def process_pi_message(
             if event_type == "response":
                 # Command acknowledgement
                 if event.get("command") == "prompt":
+                    got_response = True
                     if not event.get("success"):
                         error_msg = event.get("error", "Unknown error")
                         await manager.send_message(
@@ -166,8 +170,26 @@ async def process_pi_message(
                             {"type": "error", "message": f"Pi error: {error_msg}"},
                         )
                         break
+                    
+                    # For slash commands that don't generate content (like /feedback with errors),
+                    # Pi sends response but no agent_end. If we got response for a command
+                    # without any content, finish immediately.
+                    if is_command and not got_content:
+                        logger.info("Slash command completed without content, finishing")
+                        await manager.send_message(
+                            websocket,
+                            {
+                                "type": "message_complete",
+                                "role": "assistant",
+                                "content": "",
+                            },
+                        )
+                        break
 
             elif event_type == "message_update":
+                # Mark that we got content (agent is responding)
+                got_content = True
+                
                 # Handle nested assistant message events
                 assistant_event = event.get("assistantMessageEvent", {})
                 assistant_event_type = assistant_event.get("type")

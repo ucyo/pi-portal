@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added thumbs up/down feedback buttons on assistant messages
 * Added visual indicator for active session (green dot + left border)
 * Simplified session state management (2 variables instead of 3)
 * Added "New Session" button to start fresh conversation

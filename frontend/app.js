@@ -306,12 +306,21 @@ function handleToolResult(data) {
 function handleMessageComplete(data) {
     hideTypingIndicator();
     
+    // Extract assistant message timestamp from messages array
+    let assistantTimestamp = null;
+    if (data.messages && Array.isArray(data.messages)) {
+        const assistantMsg = data.messages.find(m => m.role === 'assistant');
+        if (assistantMsg && assistantMsg.timestamp) {
+            assistantTimestamp = assistantMsg.timestamp;
+        }
+    }
+    
     // If we have a streaming message, finalize it
     if (state.currentMessageElement) {
-        finalizeStreamingMessage();
+        finalizeStreamingMessage(assistantTimestamp);
     } else if (data.content) {
         // No streaming happened, just show the complete message
-        appendMessage('assistant', data.content);
+        appendMessage('assistant', data.content, assistantTimestamp);
     }
     
     // Update session ID if provided
@@ -388,13 +397,93 @@ function updateStreamingThinkingContent() {
 /**
  * Finalize the streaming message.
  */
-function finalizeStreamingMessage() {
+function finalizeStreamingMessage(timestamp = null) {
     if (state.currentMessageElement) {
         state.currentMessageElement.classList.remove('streaming');
+        
+        // Add feedback buttons for assistant messages
+        if (state.currentMessageElement.classList.contains('assistant')) {
+            addFeedbackButtons(state.currentMessageElement, timestamp);
+        }
+        
         state.currentMessageElement = null;
     }
     state.currentMessageContent = '';
     state.currentThinkingContent = '';
+}
+
+/**
+ * Create feedback buttons HTML.
+ */
+function createFeedbackButtonsHtml(timestamp) {
+    const dataAttr = timestamp ? `data-timestamp="${timestamp}"` : '';
+    return `
+        <div class="message-feedback" ${dataAttr}>
+            <button class="feedback-btn thumbs-up" title="Good response" aria-label="Thumbs up">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                </svg>
+            </button>
+            <button class="feedback-btn thumbs-down" title="Bad response" aria-label="Thumbs down">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+}
+
+/**
+ * Add feedback buttons to a message element.
+ * @param {HTMLElement} messageElement - The message element
+ * @param {number|null} timestamp - Message timestamp for feedback targeting
+ * @param {object|null} feedback - Existing feedback {rating: -1|0|1, comment: string|null}
+ */
+function addFeedbackButtons(messageElement, timestamp = null, feedback = null) {
+    const feedbackHtml = createFeedbackButtonsHtml(timestamp);
+    messageElement.insertAdjacentHTML('beforeend', feedbackHtml);
+    
+    const feedbackContainer = messageElement.querySelector('.message-feedback');
+    if (feedbackContainer) {
+        // Set initial state from existing feedback
+        if (feedback && feedback.rating !== 0) {
+            const thumbsUp = feedbackContainer.querySelector('.thumbs-up');
+            const thumbsDown = feedbackContainer.querySelector('.thumbs-down');
+            if (feedback.rating === 1) {
+                thumbsUp.classList.add('active');
+            } else if (feedback.rating === -1) {
+                thumbsDown.classList.add('active');
+            }
+        }
+        
+        // Add click handlers
+        setupFeedbackHandlers(feedbackContainer);
+    }
+}
+
+/**
+ * Setup click handlers for feedback buttons.
+ */
+function setupFeedbackHandlers(feedbackContainer) {
+    const thumbsUp = feedbackContainer.querySelector('.thumbs-up');
+    const thumbsDown = feedbackContainer.querySelector('.thumbs-down');
+    
+    thumbsUp.addEventListener('click', () => {
+        const isActive = thumbsUp.classList.contains('active');
+        // Toggle off if already active, otherwise set to positive
+        thumbsUp.classList.toggle('active', !isActive);
+        thumbsDown.classList.remove('active');
+        // TODO: M3.4 will send feedback to Pi
+    });
+    
+    thumbsDown.addEventListener('click', () => {
+        const isActive = thumbsDown.classList.contains('active');
+        // Toggle off if already active, otherwise set to negative
+        thumbsDown.classList.toggle('active', !isActive);
+        thumbsUp.classList.remove('active');
+        // TODO: M3.3 will open modal for comment
+        // TODO: M3.4 will send feedback to Pi
+    });
 }
 
 /**
@@ -535,7 +624,7 @@ function hideWelcome() {
 /**
  * Append a message to the chat.
  */
-function appendMessage(role, content) {
+function appendMessage(role, content, timestamp = null) {
     hideWelcome();
     
     const messageDiv = document.createElement('div');
@@ -550,6 +639,11 @@ function appendMessage(role, content) {
         </div>
         <div class="message-content">${escapeHtml(content)}</div>
     `;
+    
+    // Add feedback buttons for assistant messages
+    if (role === 'assistant') {
+        addFeedbackButtons(messageDiv, timestamp);
+    }
     
     elements.chatMessages.appendChild(messageDiv);
     scrollToBottom();
@@ -862,7 +956,7 @@ function displaySession(session) {
 /**
  * Append a message from history (past session).
  */
-function appendHistoryMessage(role, content, timestamp) {
+function appendHistoryMessage(role, content, timestamp, feedback = null) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
     
@@ -890,6 +984,11 @@ function appendHistoryMessage(role, content, timestamp) {
         </div>
         <div class="message-content">${renderContent(content || '')}</div>
     `;
+    
+    // Add feedback buttons for assistant messages
+    if (role === 'assistant') {
+        addFeedbackButtons(messageDiv, timestamp, feedback);
+    }
     
     elements.chatMessages.appendChild(messageDiv);
 }

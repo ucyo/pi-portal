@@ -750,6 +750,63 @@ kbd {
 }
 
 /* ============================================
+   Message Feedback Buttons
+   ============================================ */
+.message-feedback {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.feedback-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.feedback-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border-color: var(--border-primary);
+}
+
+.feedback-btn.thumbs-up:hover {
+    color: var(--accent-success);
+    border-color: var(--accent-success);
+}
+
+.feedback-btn.thumbs-down:hover {
+    color: var(--accent-error);
+    border-color: var(--accent-error);
+}
+
+.feedback-btn.thumbs-up.active {
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--accent-success);
+    border-color: var(--accent-success);
+}
+
+.feedback-btn.thumbs-down.active {
+    background: rgba(248, 81, 73, 0.15);
+    color: var(--accent-error);
+    border-color: var(--accent-error);
+}
+
+.feedback-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* ============================================
    Responsive Design
    ============================================ */
 @media (max-width: 768px) {

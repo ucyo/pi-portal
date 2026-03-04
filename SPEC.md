@@ -200,12 +200,12 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M3.2 - Message feedback UI
-- [ ] Track message timestamps when rendering assistant messages
-- [ ] Add thumbs up/down buttons to each Pi response
-- [ ] Style feedback buttons (subtle, non-intrusive)
-- [ ] Highlight selected feedback state
-- [ ] Allow changing feedback (click other thumb)
-- [ ] Only show feedback buttons on assistant messages
+- [x] Track message timestamps when rendering assistant messages
+- [x] Add thumbs up/down buttons to each Pi response
+- [x] Style feedback buttons (subtle, non-intrusive)
+- [x] Highlight selected feedback state
+- [x] Allow changing feedback (click other thumb)
+- [x] Only show feedback buttons on assistant messages
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M3.3 - Negative feedback modal

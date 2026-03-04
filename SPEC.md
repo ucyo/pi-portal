@@ -165,13 +165,13 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M2.4 - View past session
-- [ ] Create `GET /api/sessions/{id}` endpoint
-- [ ] Find session file by ID in `data/pi_sessions/`
-- [ ] Parse and return full message history
-- [ ] Handle click on session in sidebar
-- [ ] Load and display messages in chat area (read-only)
-- [ ] Disable input field for past sessions
-- [ ] Show visual indicator that session is read-only
+- [x] Create `GET /api/sessions/{id}` endpoint
+- [x] Find session file by ID in `data/pi_sessions/`
+- [x] Parse and return full message history
+- [x] Handle click on session in sidebar
+- [x] Load and display messages in chat area (read-only)
+- [x] Disable input field for past sessions
+- [x] Show visual indicator that session is read-only
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M2.5 - New session button

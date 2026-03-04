@@ -444,6 +444,38 @@ kbd {
     padding: 0;
 }
 
+/* Read-Only Banner */
+.read-only-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.read-only-icon {
+    font-size: 1rem;
+}
+
+.read-only-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Read-only input styling */
+.chat-input:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
 /* Typing Indicator */
 .typing-indicator {
     display: flex;

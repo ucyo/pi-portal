@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.websocket import websocket_endpoint, stop_pi_client
-from backend.session_parser import get_session_metadata
+from backend.session_parser import get_session_metadata, parse_session_file
 
 # Configure logging for Docker (stdout)
 logging.basicConfig(
@@ -105,6 +105,74 @@ async def list_sessions():
     sessions.sort(key=lambda s: s.get("timestamp", ""), reverse=True)
 
     return {"sessions": sessions}
+
+
+@app.get("/api/sessions/{session_id}")
+async def get_session(session_id: str):
+    """
+    Get a specific session with full message history.
+
+    Args:
+        session_id: The session ID (without .jsonl extension)
+
+    Returns:
+        Session metadata and full message list
+    """
+    from fastapi import HTTPException
+
+    # Find session file - files are named {timestamp}_{id}.jsonl
+    session_file = None
+    if SESSIONS_PATH.exists():
+        for path in SESSIONS_PATH.glob(f"*_{session_id}.jsonl"):
+            session_file = path
+            break
+
+    if not session_file or not session_file.exists():
+        raise HTTPException(status_code=404, detail=f"Session not found: {session_id}")
+
+    try:
+        parsed = parse_session_file(session_file)
+
+        # Convert messages to JSON-serializable format
+        messages = []
+        for msg in parsed.messages:
+            messages.append(
+                {
+                    "id": msg.id,
+                    "role": msg.role,
+                    "content": msg.content,
+                    "timestamp": msg.timestamp,
+                    "message_timestamp": msg.message_timestamp,
+                }
+            )
+
+        # Convert feedback to JSON-serializable format
+        feedback = []
+        for fb in parsed.feedback:
+            feedback.append(
+                {
+                    "target_timestamp": fb.target_timestamp,
+                    "rating": fb.rating,
+                    "comment": fb.comment,
+                    "timestamp": fb.timestamp,
+                }
+            )
+
+        return {
+            "id": parsed.header.id,
+            "timestamp": parsed.header.timestamp,
+            "cwd": parsed.header.cwd,
+            "name": parsed.name,
+            "display_name": parsed.display_name,
+            "messages": messages,
+            "feedback": feedback,
+        }
+
+    except Exception as e:
+        logger.error(f"Error parsing session {session_id}: {e}")
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=500, detail=f"Error parsing session: {e}")
 
 
 # WebSocket endpoint for chat

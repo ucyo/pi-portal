@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Added GET /api/sessions/{id} endpoint to fetch full session with messages
+* Added session viewing - click sidebar to load and display past session
+* Added read-only mode with banner and disabled input for past sessions
 * Added GET /api/sessions endpoint to list all sessions with metadata
 * Added session file parser for Pi's JSONL format (extracts messages, feedback, metadata)
 * Added Pi feedback extension for storing ratings in session JSONL

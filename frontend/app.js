@@ -31,7 +31,9 @@ const state = {
     // Session state
     sessions: [],
     currentSessionId: null,
-    sessionRefreshPending: false
+    sessionRefreshPending: false,
+    // Read-only mode for viewing past sessions
+    isViewingPastSession: false
 };
 
 // ============================================
@@ -492,11 +494,15 @@ function updateConnectionStatus(status) {
  * Update input field state based on connection and processing state.
  */
 function updateInputState() {
-    const canSend = state.connected && !state.isProcessing && elements.chatInput.value.trim();
-    elements.sendBtn.disabled = !canSend;
-    elements.chatInput.disabled = !state.connected || state.isProcessing;
+    const isReadOnly = state.isViewingPastSession;
+    const canSend = state.connected && !state.isProcessing && !isReadOnly && elements.chatInput.value.trim();
     
-    if (state.isProcessing) {
+    elements.sendBtn.disabled = !canSend;
+    elements.chatInput.disabled = !state.connected || state.isProcessing || isReadOnly;
+    
+    if (isReadOnly) {
+        elements.chatInput.placeholder = 'Viewing past session (read-only)';
+    } else if (state.isProcessing) {
         elements.chatInput.placeholder = 'Pi is thinking...';
     } else if (!state.connected) {
         elements.chatInput.placeholder = 'Connecting...';
@@ -765,10 +771,108 @@ function formatSessionDate(timestamp) {
 /**
  * Handle click on a session in the sidebar.
  */
-function handleSessionClick(sessionId) {
-    // For now, just highlight the session (viewing will be in M2.4)
+async function handleSessionClick(sessionId) {
+    // Don't reload if already viewing this session
+    if (sessionId === state.currentSessionId && state.isViewingPastSession) {
+        return;
+    }
+    
     setActiveSession(sessionId);
-    console.log('Session clicked:', sessionId, '- viewing will be implemented in M2.4');
+    await loadSession(sessionId);
+}
+
+/**
+ * Load a session from the API and display it.
+ */
+async function loadSession(sessionId) {
+    try {
+        const response = await fetch(`/api/sessions/${sessionId}`);
+        
+        if (!response.ok) {
+            console.error('Failed to load session:', response.status);
+            appendSystemMessage(`Failed to load session: ${response.statusText}`);
+            return;
+        }
+        
+        const session = await response.json();
+        displaySession(session);
+        
+    } catch (error) {
+        console.error('Error loading session:', error);
+        appendSystemMessage(`Error loading session: ${error.message}`);
+    }
+}
+
+/**
+ * Display a loaded session (read-only).
+ */
+function displaySession(session) {
+    // Enter read-only mode
+    state.isViewingPastSession = true;
+    state.currentSessionId = session.id;
+    state.chatStarted = true;
+    
+    // Clear chat area
+    elements.chatMessages.innerHTML = '';
+    
+    // Hide welcome
+    if (elements.welcomeContainer) {
+        elements.welcomeContainer.style.display = 'none';
+    }
+    
+    // Add read-only banner
+    const banner = document.createElement('div');
+    banner.className = 'read-only-banner';
+    banner.innerHTML = `
+        <span class="read-only-icon">📖</span>
+        <span class="read-only-text">Viewing past session: ${escapeHtml(session.display_name)}</span>
+    `;
+    elements.chatMessages.appendChild(banner);
+    
+    // Display all messages
+    for (const msg of session.messages) {
+        appendHistoryMessage(msg.role, msg.content, msg.timestamp);
+    }
+    
+    // Update input state (will disable it)
+    updateInputState();
+    
+    scrollToBottom();
+}
+
+/**
+ * Append a message from history (past session).
+ */
+function appendHistoryMessage(role, content, timestamp) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role}`;
+    
+    // Format timestamp
+    let timeStr = '';
+    if (timestamp) {
+        const date = new Date(timestamp);
+        timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // Determine display role
+    let displayRole = 'System';
+    if (role === 'user') {
+        displayRole = 'You';
+    } else if (role === 'assistant') {
+        displayRole = 'Pi';
+    } else if (role === 'toolResult') {
+        displayRole = 'Tool';
+    }
+    
+    messageDiv.innerHTML = `
+        <div class="message-header">
+            <span class="message-role">${displayRole}</span>
+            ${timeStr ? `<span class="message-time">${timeStr}</span>` : ''}
+        </div>
+        <div class="message-content">${renderContent(content || '')}</div>
+    `;
+    
+    elements.chatMessages.appendChild(messageDiv);
 }
 
 /**

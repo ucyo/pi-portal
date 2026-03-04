@@ -1,6 +1,8 @@
 services:
   pi:
-    image: ucyo/pi:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.pi
     volumes:
       - ~/.pi/skills:/skills
       - ./:/workspace

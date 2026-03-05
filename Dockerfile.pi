@@ -1,4 +1,4 @@
-FROM ucyo/pi:latest
+FROM ucyo/pi:latest AS build
 
 # Install system dependencies and uv
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -14,3 +14,11 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
 WORKDIR /workspace
+
+FROM build AS prod
+
+COPY . /workspace/
+
+RUN uv sync --locked
+
+CMD ["make", "start"]

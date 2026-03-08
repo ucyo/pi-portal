@@ -226,11 +226,11 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M3.5 - Load existing feedback
-- [ ] Parse CustomEntry with `customType: "pi-portal-feedback"` from session
-- [ ] Match feedback to messages by `targetTimestamp`
-- [ ] Display correct thumbs state on each message
-- [ ] Handle multiple feedback entries for same message (use latest)
-- [ ] Show feedback on past sessions (read-only view)
+- [x] Parse CustomEntry with `customType: "pi-portal-feedback"` from session
+- [x] Match feedback to messages by `targetTimestamp`
+- [x] Display correct thumbs state on each message
+- [x] Handle multiple feedback entries for same message (use latest)
+- [x] Show feedback on past sessions (read-only view)
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 ---

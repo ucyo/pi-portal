@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Added MLflow server to Procfile for tracing support
+* Added test for multiple feedback entries (use latest timestamp)
 * Fixed feedback for past sessions being written to wrong session file
 * Fixed feedback display showing first entry instead of most recent
 * Added negative feedback modal with optional comment textarea

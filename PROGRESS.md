@@ -16,7 +16,7 @@
 - [x] M1.4: completed - Backend message routing
 - [x] M1.5: completed - Frontend message rendering
 
-## Current: M2/M3 - Session Persistence & Feedback
+## Completed: M2/M3 - Session Persistence & Feedback
 
 - [x] M2.1: completed - Session file parser (backend/session_parser.py)
 - [x] M2.2: completed - Session list API (GET /api/sessions)
@@ -29,6 +29,15 @@
 - [x] M3.3: completed - Negative feedback modal (opens on thumbs down, comment textarea, submit/cancel)
 - [x] M3.4: completed - Feedback submission via Pi extension (WebSocket handler, /feedback command, saved animation)
 - [x] Bug fix: Feedback for past sessions written to correct session file (not current)
+- [x] M3.5: completed - Load existing feedback (parse from JSONL, match by timestamp, show on past sessions)
+
+## Next: M4 - MLflow Integration
+
+- [ ] M4.1: MLflow setup
+- [ ] M4.2: Create MLflow run per session
+- [ ] M4.3: Trace Pi interactions
+- [ ] M4.4: Sync feedback to MLflow
+- [ ] M4.5: Verify traces in MLflow UI
 
 ## Notes
 - Architecture changed: No SQLite, use Pi's JSONL sessions as single source of truth

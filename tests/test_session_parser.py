@@ -275,6 +275,73 @@ class TestFeedbackParsing:
         assert session.feedback[0].rating == -1
         assert session.feedback[0].comment == "This answer was incorrect"
 
+    def test_multiple_feedback_entries_for_same_message(self, tmp_path):
+        """Test that all feedback entries are returned (frontend handles 'use latest')."""
+        entries = [
+            {
+                "type": "session",
+                "version": 3,
+                "id": "test",
+                "timestamp": "2026-03-04T12:00:00.000Z",
+                "cwd": "/workspace",
+            },
+            {
+                "type": "message",
+                "id": "msg1",
+                "parentId": None,
+                "timestamp": "2026-03-04T12:00:01.000Z",
+                "message": {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "Response"}],
+                    "timestamp": 1772626800000,
+                },
+            },
+            # First feedback: negative
+            {
+                "type": "custom",
+                "customType": "pi-portal-feedback",
+                "id": "fb1",
+                "parentId": "msg1",
+                "timestamp": "2026-03-04T12:00:02.000Z",
+                "data": {
+                    "targetTimestamp": 1772626800000,
+                    "rating": -1,
+                    "comment": "Wrong answer",
+                    "timestamp": 1772626801000,
+                },
+            },
+            # Second feedback: changed to positive (later timestamp)
+            {
+                "type": "custom",
+                "customType": "pi-portal-feedback",
+                "id": "fb2",
+                "parentId": "fb1",
+                "timestamp": "2026-03-04T12:00:03.000Z",
+                "data": {
+                    "targetTimestamp": 1772626800000,
+                    "rating": 1,
+                    "comment": None,
+                    "timestamp": 1772626802000,
+                },
+            },
+        ]
+
+        session_file = tmp_path / "multi_feedback.jsonl"
+        with open(session_file, "w") as f:
+            for entry in entries:
+                f.write(json.dumps(entry) + "\n")
+
+        session = parse_session_file(session_file)
+
+        # Parser returns all feedback entries; frontend uses the latest
+        assert len(session.feedback) == 2
+        # Both target the same message
+        assert session.feedback[0].target_timestamp == 1772626800000
+        assert session.feedback[1].target_timestamp == 1772626800000
+        # First is negative, second is positive
+        assert session.feedback[0].rating == -1
+        assert session.feedback[1].rating == 1
+
 
 class TestSessionName:
     """Tests for session name handling."""

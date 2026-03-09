@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Removed unused Pi feedback extension (backend writes directly to JSONL)
 * Removed MLflow integration (simplified architecture)
 * Removed aiosqlite dependency (no longer needed)
 * Added test for multiple feedback entries (use latest timestamp)

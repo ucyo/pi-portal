@@ -198,9 +198,6 @@ Example:
 
 ```
 pi-portal/
-├── .pi/
-│   └── extensions/
-│       └── feedback.ts   # Pi extension for storing feedback
 ├── backend/
 │   ├── main.py           # FastAPI app entry point
 │   ├── pi_client.py      # Pi RPC communication

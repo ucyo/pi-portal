@@ -70,7 +70,6 @@ Browser (HTML/JS) <--WebSocket--> FastAPI Backend <--JSON-RPC--> Pi (subprocess)
 
 ```
 pi-portal/
-├── .pi/              # Pi extensions
 ├── backend/          # FastAPI backend
 ├── frontend/         # HTML/CSS/JS frontend
 ├── data/             # Pi sessions (JSONL)

@@ -18,7 +18,7 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 | M0    | Project Setup             | Infrastructure, folder structure, dependencies, Honcho config |
 | M1    | Basic Chat                | Frontend UI + backend WebSocket + Pi integration              |
 | M2    | Session Persistence       | Parse Pi's JSONL sessions, session list, view past sessions   |
-| M3    | Feedback System           | Per-message feedback via Pi extension (stored in JSONL)       |
+| M3    | Feedback System           | Per-message feedback (stored in JSONL)                        |
 | M4    | Polish & Refinement       | UI improvements, error handling, documentation                |
 | M5    | Docker Compose Deployment | Split services into containers                                |
 
@@ -181,17 +181,14 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 
 ### M3 - Feedback System
 
-> **Architecture Note:** Feedback is stored in Pi's session JSONL as CustomEntry via a Pi extension.
-> The extension (`.pi/extensions/feedback.ts`) registers a `/feedback` command.
+> **Architecture Note:** Feedback is stored in Pi's session JSONL as CustomEntry.
 > Messages are identified by their `timestamp` field (unique within a session).
+> The backend writes feedback directly to the session file to ensure it goes to the correct session.
 
-#### M3.1 - Pi feedback extension
-- [x] Create `.pi/extensions/feedback.ts`
-- [x] Register `/feedback` command accepting JSON args
-- [x] Store feedback as CustomEntry with `customType: "pi-portal-feedback"`
+#### M3.1 - Feedback data model
+- [x] Define feedback CustomEntry format with `customType: "pi-portal-feedback"`
 - [x] Data format: `{targetTimestamp, rating, comment, timestamp}`
-- [x] Register `/feedback-list` command for debugging
-- [x] Test extension via RPC prompt command
+- [x] Backend writes feedback directly to session JSONL files
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M3.2 - Message feedback UI
@@ -212,11 +209,11 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 - [x] Allow submitting without comment (optional text)
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
-#### M3.4 - Feedback submission via Pi extension
+#### M3.4 - Feedback submission
 - [x] Send feedback via WebSocket to backend
-- [x] Backend invokes Pi `/feedback` command via RPC prompt
-- [x] Format: `/feedback {"targetTimestamp":123,"rating":1,"comment":null}`
-- [x] Handle extension response (notify event)
+- [x] Backend writes feedback directly to session JSONL file
+- [x] Include sessionId to target correct session (for past sessions)
+- [x] Send confirmation back to frontend
 - [x] Update UI to reflect saved state
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
@@ -373,8 +370,7 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 | ---------------- | ------------------ | ----------------------------------------------------------------------------------------- |
 | **Frontend**     | HTML/CSS/JS        | Chat UI, sidebar, WebSocket connection, feedback capture, display past sessions          |
 | **Backend**      | Python/FastAPI     | Serve frontend, WebSocket handling, Pi subprocess management, session parsing, REST APIs |
-| **Pi**           | Node.js (RPC mode) | Agent capabilities via JSON-RPC, session storage (JSONL), feedback extension             |
-| **Pi Extension** | TypeScript         | `/feedback` command to store user feedback as CustomEntry in session                     |
+| **Pi**           | Node.js (RPC mode) | Agent capabilities via JSON-RPC, session storage (JSONL)                                 |
 
 ### Data Storage
 
@@ -397,10 +393,9 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 ### Feedback Flow
 
 1. User clicks thumbs up/down on a message
-2. Frontend sends feedback via WebSocket (includes message timestamp)
-3. Backend invokes `/feedback` command via Pi RPC
-4. Pi extension appends CustomEntry to session JSONL
-5. Feedback persists in same file as messages
+2. Frontend sends feedback via WebSocket (includes message timestamp and sessionId)
+3. Backend writes CustomEntry directly to the session JSONL file
+4. Feedback persists in same file as messages
 
 ---
 
@@ -465,7 +460,7 @@ See Pi's `docs/session.md` for full specification.
 }
 ```
 
-**Feedback Entry** (CustomEntry from Pi extension):
+**Feedback Entry** (CustomEntry written by backend):
 ```json
 {
   "type": "custom",
@@ -496,9 +491,6 @@ See Pi's `docs/session.md` for full specification.
 
 ```
 pi-portal/
-├── .pi/
-│   └── extensions/
-│       └── feedback.ts   # Pi extension for feedback storage
 ├── backend/
 │   ├── main.py           # FastAPI app entry point
 │   ├── session_parser.py # Parse Pi's JSONL session files
@@ -559,6 +551,6 @@ pi-portal/
 - **Feedback integers**: Use -1 (negative), 0 (none), 1 (positive)
 - **Feedback comments**: Only relevant for negative feedback; clear when rating changes to positive/neutral
 - **Pi sessions**: Pi's JSONL sessions are the single source of truth for messages AND feedback
-- **Feedback storage**: Pi extension appends CustomEntry to session; identified by `targetTimestamp`
+- **Feedback storage**: Backend appends CustomEntry to session JSONL; identified by `targetTimestamp`
 - **No database**: All data stored in Pi's JSONL files directly
 - **WebSocket protocol**: Define JSON structure during M1 implementation

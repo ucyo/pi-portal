@@ -20,14 +20,14 @@
 
 - [x] M2.1: completed - Session file parser (backend/session_parser.py)
 - [x] M2.2: completed - Session list API (GET /api/sessions)
-- [x] M3.1: completed - Pi feedback extension (.pi/extensions/feedback.ts)
+- [x] M3.1: completed - Feedback data model
 - [x] Bug fix: WebSocket hanging on slash commands without content
 - [x] M2.3: completed - Sidebar session list (fetch, render, highlight, auto-refresh)
 - [x] M2.4: completed - View past session (API, load messages, read-only mode)
 - [x] M2.5: completed - New session button (WebSocket command, UI reset)
 - [x] M3.2: completed - Message feedback UI (thumbs up/down buttons, styling, toggle state)
 - [x] M3.3: completed - Negative feedback modal (opens on thumbs down, comment textarea, submit/cancel)
-- [x] M3.4: completed - Feedback submission via Pi extension (WebSocket handler, /feedback command, saved animation)
+- [x] M3.4: completed - Feedback submission (WebSocket handler, direct JSONL write)
 - [x] Bug fix: Feedback for past sessions written to correct session file (not current)
 - [x] M3.5: completed - Load existing feedback (parse from JSONL, match by timestamp, show on past sessions)
 
@@ -41,7 +41,7 @@
 
 ## Notes
 - Architecture changed: No database, use Pi's JSONL sessions as single source of truth
-- Feedback stored via Pi extension using CustomEntry (customType: "pi-portal-feedback")
+- Feedback stored directly to JSONL by backend using CustomEntry (customType: "pi-portal-feedback")
 - Messages identified by timestamp field for feedback matching
 - Dependencies: fastapi, uvicorn, websockets
 - Dev deps: pytest, pytest-asyncio, httpx, ruff, honcho

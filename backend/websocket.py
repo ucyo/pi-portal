@@ -496,7 +496,7 @@ async def _write_feedback_to_session_file(
                     except json.JSONDecodeError:
                         continue
 
-        # Build the custom feedback entry (same format as Pi extension)
+        # Build the custom feedback entry
         entry = {
             "type": "custom",
             "customType": "pi-portal-feedback",

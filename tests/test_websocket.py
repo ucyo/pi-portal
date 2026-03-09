@@ -586,7 +586,7 @@ class TestFeedbackWebSocket:
     @pytest.mark.integration
     def test_feedback_submission_to_pi(self):
         """Test full feedback submission with Pi running."""
-        # This test requires Pi to be running with the feedback extension
+        # Feedback is written directly to session files by the backend
         client = TestClient(app)
 
         with client.websocket_connect("/ws") as websocket:

@@ -6,8 +6,7 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 
 - **Chat Interface**: Simple web UI to chat with Pi
 - **Session Persistence**: Save and view past conversations
-- **Feedback System**: Rate messages and sessions with optional comments
-- **MLflow Tracing**: Trace conversations for analysis and improvement
+- **Feedback System**: Rate messages with optional comments
 
 ## Quick Start
 
@@ -38,14 +37,11 @@ make start
 # See all available commands
 make help
 
-# Start all services (FastAPI, MLflow, Pi)
+# Start all services (FastAPI, Pi)
 make start
 
 # Start only the web server
 make start-web
-
-# Start only MLflow
-make start-mlflow
 ```
 
 ### Testing
@@ -65,18 +61,19 @@ make fmt
 
 ```
 Browser (HTML/JS) <--WebSocket--> FastAPI Backend <--JSON-RPC--> Pi (subprocess)
-                                        |
-                                        v
-                                    SQLite + MLflow
+                                                                        |
+                                                                        v
+                                                                 Pi Sessions (JSONL)
 ```
 
 ## Project Structure
 
 ```
 pi-portal/
+├── .pi/              # Pi extensions
 ├── backend/          # FastAPI backend
 ├── frontend/         # HTML/CSS/JS frontend
-├── data/             # SQLite database and Pi sessions
+├── data/             # Pi sessions (JSONL)
 ├── Procfile          # Honcho process definitions
 ├── pyproject.toml    # Python dependencies
 └── README.md

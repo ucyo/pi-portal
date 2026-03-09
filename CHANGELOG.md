@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-* Added MLflow server to Procfile for tracing support
+* Removed MLflow integration (simplified architecture)
+* Removed aiosqlite dependency (no longer needed)
 * Added test for multiple feedback entries (use latest timestamp)
 * Fixed feedback for past sessions being written to wrong session file
 * Fixed feedback display showing first entry instead of most recent
@@ -32,7 +33,7 @@
 * Added structured logging for Pi communication (TX/RX format)
 * Added FastAPI backend with health check endpoint
 * Added static file serving and CORS support for web frontend
-* Added Honcho process management with Procfile for web, mlflow, and pi services
+* Added Honcho process management with Procfile for web and pi services
 * Added Makefile with `install`, `start`, `test`, `fmt`, `check`, and `clean` commands
 * Added Pi RPC client for subprocess communication with Pi agent
 * Added chat interface with sidebar, message area, and input field

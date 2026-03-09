@@ -1,4 +1,4 @@
-.PHONY: help install dev test test-integ test-all fmt check start start-web start-mlflow clean
+.PHONY: help install dev test test-integ test-all fmt check start start-web clean
 
 # Use uv from PATH or home directory
 UV := $(shell command -v uv 2>/dev/null || echo "$(HOME)/.local/bin/uv")
@@ -12,9 +12,8 @@ help:
 	@echo "  dev         Install dev dependencies"
 	@echo ""
 	@echo "Development:"
-	@echo "  start       Start all services (web, mlflow, pi)"
+	@echo "  start       Start all services (web, pi)"
 	@echo "  start-web   Start only the web server"
-	@echo "  start-mlflow Start only MLflow server"
 	@echo ""
 	@echo "Testing & Quality:"
 	@echo "  test        Run unit tests (verbose)"
@@ -39,9 +38,6 @@ start:
 
 start-web:
 	$(UV) run uvicorn backend.main:app --reload --port 8000 --host 0.0.0.0
-
-start-mlflow:
-	$(UV) run mlflow server --host 127.0.0.1 --port 5000  --host 0.0.0.0
 
 # Testing & Quality
 test:

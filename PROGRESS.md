@@ -31,19 +31,19 @@
 - [x] Bug fix: Feedback for past sessions written to correct session file (not current)
 - [x] M3.5: completed - Load existing feedback (parse from JSONL, match by timestamp, show on past sessions)
 
-## Next: M4 - MLflow Integration
+## Next: M4 - Polish & Refinement
 
-- [ ] M4.1: MLflow setup
-- [ ] M4.2: Create MLflow run per session
-- [ ] M4.3: Trace Pi interactions
-- [ ] M4.4: Sync feedback to MLflow
-- [ ] M4.5: Verify traces in MLflow UI
+- [ ] M4.1: Error handling
+- [ ] M4.2: UI polish
+- [ ] M4.3: Configuration file
+- [ ] M4.4: Documentation
+- [ ] M4.5: Testing & bug fixes
 
 ## Notes
-- Architecture changed: No SQLite, use Pi's JSONL sessions as single source of truth
+- Architecture changed: No database, use Pi's JSONL sessions as single source of truth
 - Feedback stored via Pi extension using CustomEntry (customType: "pi-portal-feedback")
 - Messages identified by timestamp field for feedback matching
-- Dependencies: fastapi, uvicorn, mlflow, websockets (removed aiosqlite dependency)
+- Dependencies: fastapi, uvicorn, websockets
 - Dev deps: pytest, pytest-asyncio, httpx, ruff, honcho
 - Pi client tested: starts subprocess, sends commands, parses responses
 - WebSocket: backend/websocket.py + frontend/app.js with reconnection logic

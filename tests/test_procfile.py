@@ -10,12 +10,11 @@ def test_procfile_exists():
 
 
 def test_procfile_has_required_services():
-    """Procfile should define web, mlflow, and pi services."""
+    """Procfile should define web and pi services."""
     procfile = Path(__file__).parent.parent / "Procfile"
     content = procfile.read_text()
 
     assert "web:" in content, "web service not defined"
-    assert "mlflow:" in content, "mlflow service not defined"
     assert "pi:" in content, "pi service not defined"
 
 

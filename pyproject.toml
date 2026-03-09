@@ -5,7 +5,6 @@ description = "Web-based chat interface for Pi coding agent"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "aiosqlite>=0.22.1",
     "fastapi>=0.135.1",
     "uvicorn>=0.41.0",
     "websockets>=16.0",

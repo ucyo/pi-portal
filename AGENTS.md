@@ -8,7 +8,7 @@ Use `make` for common tasks (run `make help` for all options):
 
 ```bash
 make install     # Install dependencies
-make start       # Start all services (web, mlflow, pi)
+make start       # Start all services (web, pi)
 make start-web   # Start only the web server
 make test        # Run all tests
 make fmt         # Format and lint code (ruff)
@@ -77,7 +77,6 @@ make check             # Run tests + lint
 - Test Pi communication end-to-end
 - Test error scenarios (Pi crash, disconnect)
 - Verify data persists in Pi session files
-- Check MLflow UI for traces (when implemented)
 
 ## After Completing Work
 
@@ -192,7 +191,7 @@ Example:
 | `AGENTS.md` | This file - agent instructions |
 | `README.md` | User-facing documentation |
 | `Makefile` | Build commands (`make help` for options) |
-| `Procfile` | Honcho process definitions |
+| `Procfile` | Honcho process definitions for web and pi |
 | `pyproject.toml` | Python project config (uv) |
 
 ## Project Structure
@@ -218,7 +217,7 @@ pi-portal/
 │   └── starter_prompts.json  # Configurable starter prompts
 ├── data/
 │   └── pi_sessions/      # Pi's JSONL sessions (single source of truth)
-├── Procfile              # Honcho process definitions
+├── Procfile              # Honcho process definitions (web, pi)
 ├── pyproject.toml        # Python project config
 ├── README.md
 ├── SPEC.md
@@ -263,28 +262,10 @@ pi --mode rpc
 ```bash
 # Procfile format:
 web: uv run uvicorn backend.main:app --port 8000
-mlflow: uv run mlflow server --port 5000
 pi: pi --mode rpc
 ```
 
-### SQLite with aiosqlite
-```python
-import aiosqlite
 
-async with aiosqlite.connect("data/app.db") as db:
-    await db.execute("INSERT INTO ...")
-    await db.commit()
-```
-
-### MLflow Tracing
-```python
-import mlflow
-
-with mlflow.start_span(name="user_prompt") as span:
-    span.set_inputs({"prompt": message})
-    # ... process ...
-    span.set_outputs({"response": response})
-```
 
 ## Validation Checklist
 
@@ -292,7 +273,7 @@ Before marking a milestone complete:
 
 - [ ] All tasks in SPEC.md checked off
 - [ ] All checks pass (`make check`)
-- [ ] Server starts without errors (`make start-web`)
+- [ ] Server starts without errors (`make start`)
 - [ ] Manual testing done in browser
 - [ ] WebSocket connection works
 - [ ] Data persists correctly
@@ -312,4 +293,4 @@ Before marking a milestone complete:
 - Ratings are integers: -1 (negative), 0 (none), 1 (positive)
 - Comments only relevant for negative feedback
 - Clear comments when rating changes from -1 to 0 or 1
-- Store in SQLite (for UI) and sync to MLflow (for analysis)
+- Store in Pi session JSONL via extension

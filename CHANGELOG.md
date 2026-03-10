@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+* Added UI polish with smooth animations and transitions (M4.2)
+* Added `:active` states to all interactive buttons for tactile feedback
+* Added hover animations to session list, starter prompts, and buttons
+* Improved typing indicator with color transitions and better animation
+* Added fade-in and expand animations for collapsible sections
+* Enhanced responsive design with 1024px and 480px breakpoints
+* Added `:focus-visible` outlines for keyboard navigation accessibility
+* Improved mobile layout with better padding and sizing across screen sizes
+* Added smooth scroll behavior with scroll-padding
+* Enhanced modal button interactions with lift effects and shadows
 * Added comprehensive error handling (M4.1)
 * Added error notification system with toast-style messages
 * Added frontend/error-handler.js for centralized error management

@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.pi
     volumes:
-      - ~/.pi/skills:/skills
+      - ~/.pi/skills:/root/.pi/agent/skills
       - ./auth.json:/root/.pi/agent/auth.json
       - ./:/workspace
     ports:

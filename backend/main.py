@@ -173,20 +173,25 @@ async def get_session(session_id: str):
             "feedback": feedback,
         }
 
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         logger.error(f"Session file not found: {session_id}")
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="Session file not found")
-    
+
     except ValueError as e:
         logger.error(f"Invalid session file {session_id}: {e}")
         from fastapi import HTTPException
+
         raise HTTPException(status_code=422, detail=f"Invalid session file: {str(e)}")
-    
-    except Exception as e:
+
+    except Exception:
         logger.exception(f"Error parsing session {session_id}")
         from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail="Failed to load session. The file may be corrupted.")
+
+        raise HTTPException(
+            status_code=500, detail="Failed to load session. The file may be corrupted."
+        )
 
 
 # WebSocket endpoint for chat

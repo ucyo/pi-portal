@@ -21,4 +21,4 @@ COPY . /workspace/
 
 RUN uv sync --locked
 
-CMD ["make", "start"]
+ENTRYPOINT ["make", "start"]

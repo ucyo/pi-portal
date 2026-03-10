@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.pi
     volumes:
       - ~/.pi/skills:/skills
+      - ./auth.json:/root/.pi/agent/auth.json
       - ./:/workspace
     ports:
-      - 8000:8000
-    command: --skill /skills
+      - 8002:8000

@@ -70,3 +70,4 @@ temp/
 *.tmp
 .pytest_cache/
 .env
+auth.json

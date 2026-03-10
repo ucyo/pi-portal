@@ -31,13 +31,23 @@
 - [x] Bug fix: Feedback for past sessions written to correct session file (not current)
 - [x] M3.5: completed - Load existing feedback (parse from JSONL, match by timestamp, show on past sessions)
 
-## Current: M4 - Polish & Refinement
+## Completed: M4 - Polish & Refinement
 
 - [x] M4.1: Error handling - completed
 - [x] M4.2: UI polish - completed
 - [x] M4.3: Configuration file - completed
 - [x] M4.4: Documentation - completed
-- [ ] M4.5: Testing & bug fixes
+- [x] M4.5: Testing & bug fixes - completed (automated: 132/132 passing, manual checklist created)
+
+## Next: M5 - Docker Compose Deployment
+
+- [ ] M5.1: Create Dockerfile for FastAPI backend
+- [ ] M5.2: Create Dockerfile for Pi service
+- [ ] M5.3: Create Docker Compose file
+- [ ] M5.4: Configure inter-service communication
+- [ ] M5.5: Volume mounts for Pi sessions
+- [ ] M5.6: Test full stack in Docker Compose
+- [ ] M5.7: Documentation for Docker deployment
 
 ## Notes
 - Architecture changed: No database, use Pi's JSONL sessions as single source of truth

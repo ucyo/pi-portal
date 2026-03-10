@@ -69,3 +69,4 @@ tmp/
 temp/
 *.tmp
 .pytest_cache/
+.env

@@ -2,15 +2,15 @@
 
 import asyncio
 import logging
-from pathlib import Path
 from typing import Set
 
 from fastapi import WebSocket, WebSocketDisconnect
 
+from backend.config import config
 from backend.pi_client import PiClient
 
 # Session directory path
-SESSIONS_PATH = Path("data/pi_sessions")
+SESSIONS_PATH = config.get_absolute_session_dir()
 
 logger = logging.getLogger(__name__)
 

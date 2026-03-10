@@ -6,6 +6,8 @@ import logging
 from pathlib import Path
 from typing import Any, AsyncIterator, Callable
 
+from backend.config import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -258,5 +260,8 @@ def get_pi_client() -> PiClient:
     """Get or create the default Pi client instance."""
     global _default_client
     if _default_client is None:
-        _default_client = PiClient()
+        _default_client = PiClient(
+            session_dir=config.get_absolute_session_dir(),
+            pi_executable=config.pi_executable,
+        )
     return _default_client

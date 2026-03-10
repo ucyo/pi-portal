@@ -45,13 +45,11 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 - [x] Document Python version requirement in `pyproject.toml`
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
-#### M0.3 - Set up Honcho
-- [x] Install Honcho (`uv add honcho --dev`)
-- [x] Create `Procfile` with entries for:
-  - FastAPI (uvicorn)
-  - Pi (RPC mode)
-- [x] Test `honcho start` runs all processes
-- [x] Document Honcho usage in README
+#### M0.3 - Set up process management
+- [x] ~~Install Honcho~~ (removed - unnecessary for single service)
+- [x] ~~Create Procfile~~ (removed - backend manages Pi directly)
+- [x] Backend starts Pi subprocess on-demand
+- [x] Document usage in README
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M0.4 - Basic FastAPI app
@@ -232,7 +230,6 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 #### M4.1 - Error handling
 - [ ] Handle WebSocket disconnection gracefully
 - [ ] Handle Pi subprocess crash and auto-restart
-
 - [ ] Handle session file parsing errors
 - [ ] Display user-friendly error messages in UI
 - [ ] Log errors server-side for debugging
@@ -249,12 +246,14 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M4.3 - Configuration file
-- [ ] Create `config.yaml` or `.env` file for settings
-- [ ] Configurable Pi executable path
-- [ ] Configurable Pi session directory
-- [ ] Configurable server host/port
-- [ ] Load config on startup
-- [ ] Document all configuration options
+- [x] Create configuration system using Pydantic BaseSettings
+- [x] Use PI_PORTAL_ prefix for all environment variables
+- [x] Support .env file loading with python-dotenv
+- [x] Configurable Pi executable path
+- [x] Configurable Pi session directory
+- [x] Configurable server host/port/reload
+- [x] Type validation and sensible defaults
+- [x] Document all configuration options
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M4.4 - Documentation
@@ -366,17 +365,17 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 
 ### Components
 
-| Component        | Technology         | Responsibilities                                                                          |
-| ---------------- | ------------------ | ----------------------------------------------------------------------------------------- |
-| **Frontend**     | HTML/CSS/JS        | Chat UI, sidebar, WebSocket connection, feedback capture, display past sessions          |
-| **Backend**      | Python/FastAPI     | Serve frontend, WebSocket handling, Pi subprocess management, session parsing, REST APIs |
-| **Pi**           | Node.js (RPC mode) | Agent capabilities via JSON-RPC, session storage (JSONL)                                 |
+| Component    | Technology         | Responsibilities                                                                         |
+| ------------ | ------------------ | ---------------------------------------------------------------------------------------- |
+| **Frontend** | HTML/CSS/JS        | Chat UI, sidebar, WebSocket connection, feedback capture, display past sessions          |
+| **Backend**  | Python/FastAPI     | Serve frontend, WebSocket handling, Pi subprocess management, session parsing, REST APIs |
+| **Pi**       | Node.js (RPC mode) | Agent capabilities via JSON-RPC, session storage (JSONL)                                 |
 
 ### Data Storage
 
-| Storage       | What's Stored                               | Managed By       |
-| ------------- | ------------------------------------------- | ---------------- |
-| **Pi JSONL**  | Sessions, messages, feedback (CustomEntry)  | Pi + Extension   |
+| Storage      | What's Stored                              | Managed By     |
+| ------------ | ------------------------------------------ | -------------- |
+| **Pi JSONL** | Sessions, messages, feedback (CustomEntry) | Pi + Extension |
 
 > **Single Source of Truth:** Pi's JSONL session files store everything - messages AND feedback.
 > Backend parses JSONL files to list sessions and retrieve messages.
@@ -478,12 +477,12 @@ See Pi's `docs/session.md` for full specification.
 ```
 
 **Key Fields for Feedback:**
-| Field             | Type    | Description                                    |
-| ----------------- | ------- | ---------------------------------------------- |
-| `targetTimestamp` | number  | Message's `timestamp` field (Unix ms)          |
-| `rating`          | integer | -1 (negative), 0 (none), 1 (positive)          |
-| `comment`         | string? | Optional comment (only for negative feedback)  |
-| `timestamp`       | number  | When feedback was submitted (Unix ms)          |
+| Field             | Type    | Description                                   |
+| ----------------- | ------- | --------------------------------------------- |
+| `targetTimestamp` | number  | Message's `timestamp` field (Unix ms)         |
+| `rating`          | integer | -1 (negative), 0 (none), 1 (positive)         |
+| `comment`         | string? | Optional comment (only for negative feedback) |
+| `timestamp`       | number  | When feedback was submitted (Unix ms)         |
 
 ---
 

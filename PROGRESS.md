@@ -4,7 +4,7 @@
 
 - [x] M0.1: completed - project structure initialized
 - [x] M0.2: completed - Python environment set up
-- [x] M0.3: completed - Honcho setup with Procfile
+- [x] M0.3: completed - Process management setup (removed Honcho - unnecessary for single service)
 - [x] M0.4: completed - static files + CORS configured
 - [x] M0.5: completed - Pi RPC communication verified
 
@@ -31,11 +31,11 @@
 - [x] Bug fix: Feedback for past sessions written to correct session file (not current)
 - [x] M3.5: completed - Load existing feedback (parse from JSONL, match by timestamp, show on past sessions)
 
-## Next: M4 - Polish & Refinement
+## Current: M4 - Polish & Refinement
 
 - [ ] M4.1: Error handling
 - [ ] M4.2: UI polish
-- [ ] M4.3: Configuration file
+- [x] M4.3: Configuration file - completed
 - [ ] M4.4: Documentation
 - [ ] M4.5: Testing & bug fixes
 
@@ -43,8 +43,9 @@
 - Architecture changed: No database, use Pi's JSONL sessions as single source of truth
 - Feedback stored directly to JSONL by backend using CustomEntry (customType: "pi-portal-feedback")
 - Messages identified by timestamp field for feedback matching
-- Dependencies: fastapi, uvicorn, websockets
-- Dev deps: pytest, pytest-asyncio, httpx, ruff, honcho
+- Configuration via Pydantic BaseSettings with PI_PORTAL_ prefix (.env file support)
+- Dependencies: fastapi, uvicorn, websockets, pydantic-settings, python-dotenv
+- Dev deps: pytest, pytest-asyncio, httpx, ruff
 - Pi client tested: starts subprocess, sends commands, parses responses
 - WebSocket: backend/websocket.py + frontend/app.js with reconnection logic
 - M1.3: Pi lifecycle integrated into WebSocket (lazy start, crash recovery, shutdown hook)

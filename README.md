@@ -27,6 +27,9 @@ cd pi-portal
 # Install dependencies
 make install
 
+# (Optional) Copy and customize configuration
+cp .env.example .env
+
 # Start all services
 make start
 ```
@@ -37,12 +40,31 @@ make start
 # See all available commands
 make help
 
-# Start all services (FastAPI, Pi)
+# Start the web server (Pi is started automatically by the backend)
 make start
 
-# Start only the web server
+# Or start directly
 make start-web
 ```
+
+### Configuration
+
+Pi Portal uses Pydantic BaseSettings for configuration. All environment variables use the `PI_PORTAL_` prefix.
+
+Copy `.env.example` to `.env` and customize:
+
+```bash
+# Pi Configuration
+PI_PORTAL_PI_EXECUTABLE=pi                    # Path to Pi executable
+PI_PORTAL_PI_SESSION_DIR=data/pi_sessions     # Session storage directory
+
+# Server Configuration
+PI_PORTAL_SERVER_HOST=0.0.0.0                 # Server bind address
+PI_PORTAL_SERVER_PORT=8000                    # Server port
+PI_PORTAL_SERVER_RELOAD=false                 # Enable auto-reload (development)
+```
+
+All settings have sensible defaults and are optional. Configuration is validated using Pydantic.
 
 ### Testing
 
@@ -73,7 +95,6 @@ pi-portal/
 ├── backend/          # FastAPI backend
 ├── frontend/         # HTML/CSS/JS frontend
 ├── data/             # Pi sessions (JSONL)
-├── Procfile          # Honcho process definitions
 ├── pyproject.toml    # Python dependencies
 └── README.md
 ```

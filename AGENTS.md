@@ -8,8 +8,7 @@ Use `make` for common tasks (run `make help` for all options):
 
 ```bash
 make install     # Install dependencies
-make start       # Start all services (web, pi)
-make start-web   # Start only the web server
+make start       # Start web server (Pi subprocess managed by backend)
 make test        # Run all tests
 make fmt         # Format and lint code (ruff)
 make check       # Run tests + fmt
@@ -18,7 +17,7 @@ make clean       # Remove generated files
 
 For adding dependencies:
 - `uv add <package>` - add a dependency
-- `uv add --dev <package>` - add a dev dependency
+- `uv add --dev <package>` - add a dev dependency (e.g., pytest, ruff)
 
 ## Before Starting Work
 
@@ -191,7 +190,6 @@ Example:
 | `AGENTS.md` | This file - agent instructions |
 | `README.md` | User-facing documentation |
 | `Makefile` | Build commands (`make help` for options) |
-| `Procfile` | Honcho process definitions for web and pi |
 | `pyproject.toml` | Python project config (uv) |
 
 ## Project Structure
@@ -214,7 +212,6 @@ pi-portal/
 │   └── starter_prompts.json  # Configurable starter prompts
 ├── data/
 │   └── pi_sessions/      # Pi's JSONL sessions (single source of truth)
-├── Procfile              # Honcho process definitions (web, pi)
 ├── pyproject.toml        # Python project config
 ├── README.md
 ├── SPEC.md
@@ -255,12 +252,7 @@ pi --mode rpc
 # Communication via stdin/stdout JSON
 ```
 
-### Honcho
-```bash
-# Procfile format:
-web: uv run uvicorn backend.main:app --port 8000
-pi: pi --mode rpc
-```
+
 
 
 

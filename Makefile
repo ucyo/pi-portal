@@ -12,8 +12,7 @@ help:
 	@echo "  dev         Install dev dependencies"
 	@echo ""
 	@echo "Development:"
-	@echo "  start       Start all services (web, pi)"
-	@echo "  start-web   Start only the web server"
+	@echo "  start       Start the web server (Pi managed by backend)"
 	@echo ""
 	@echo "Testing & Quality:"
 	@echo "  test        Run unit tests (verbose)"
@@ -34,10 +33,9 @@ dev:
 
 # Development
 start:
-	$(UV) run honcho start
+	$(UV) run python -m backend.server
 
-start-web:
-	$(UV) run uvicorn backend.main:app --reload --port 8000 --host 0.0.0.0
+start-web: start
 
 # Testing & Quality
 test:

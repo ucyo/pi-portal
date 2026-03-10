@@ -4,12 +4,12 @@ import json
 import logging
 import sys
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from backend.config import config
 from backend.websocket import websocket_endpoint, stop_pi_client
 from backend.session_parser import get_session_metadata, parse_session_file
 
@@ -43,11 +43,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Pi Portal", lifespan=lifespan)
 
-# Paths
-ROOT_PATH = Path(__file__).parent.parent
-CONFIG_PATH = ROOT_PATH / "config"
-FRONTEND_PATH = ROOT_PATH / "frontend"
-SESSIONS_PATH = ROOT_PATH / "data" / "pi_sessions"
+# Paths from configuration
+SESSIONS_PATH = config.get_absolute_session_dir()
 
 # CORS configuration for local development
 app.add_middleware(
@@ -68,7 +65,7 @@ async def health_check():
 @app.get("/api/config/starter-prompts")
 async def get_starter_prompts():
     """Get starter prompts for the welcome screen."""
-    prompts_file = CONFIG_PATH / "starter_prompts.json"
+    prompts_file = config.config_path / "starter_prompts.json"
 
     if prompts_file.exists():
         with open(prompts_file) as f:
@@ -191,4 +188,4 @@ async def ws_endpoint(websocket: WebSocket):
 
 
 # Static files - must be mounted after API routes
-app.mount("/", StaticFiles(directory=FRONTEND_PATH, html=True), name="frontend")
+app.mount("/", StaticFiles(directory=config.frontend_path, html=True), name="frontend")

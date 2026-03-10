@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+* Removed Honcho and Procfile (unnecessary for single service)
+* Removed Pi from process management (backend manages Pi as subprocess)
+* Added configuration system using Pydantic BaseSettings
+* Added `.env.example` file with all configuration options
+* All environment variables use PI_PORTAL_ prefix for namespacing
+* Made Pi executable path configurable (PI_PORTAL_PI_EXECUTABLE)
+* Made Pi session directory configurable (PI_PORTAL_PI_SESSION_DIR)
+* Made server host/port configurable (PI_PORTAL_SERVER_HOST, PI_PORTAL_SERVER_PORT)
+* Added server reload option for development (PI_PORTAL_SERVER_RELOAD)
+* Configuration validates field types and supports .env file loading
 * Removed unused Pi feedback extension (backend writes directly to JSONL)
 * Removed MLflow integration (simplified architecture)
 * Removed aiosqlite dependency (no longer needed)
@@ -34,7 +44,7 @@
 * Added structured logging for Pi communication (TX/RX format)
 * Added FastAPI backend with health check endpoint
 * Added static file serving and CORS support for web frontend
-* Added Honcho process management with Procfile for web and pi services
+* ~~Added Honcho process management~~ (removed - single service doesn't need process manager)
 * Added Makefile with `install`, `start`, `test`, `fmt`, `check`, and `clean` commands
 * Added Pi RPC client for subprocess communication with Pi agent
 * Added chat interface with sidebar, message area, and input field

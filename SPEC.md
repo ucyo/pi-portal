@@ -257,13 +257,13 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M4.4 - Documentation
-- [ ] Write README with project overview
-- [ ] Document installation steps
-- [ ] Document development setup (Honcho)
-- [ ] Document configuration options
-- [ ] Document usage guide for end users
-- [ ] Add architecture diagram
-- [ ] Document API endpoints
+- [x] Write README with project overview
+- [x] Document installation steps
+- [x] Document development setup (backend manages Pi directly)
+- [x] Document configuration options
+- [x] Document usage guide for end users
+- [x] Add architecture diagram
+- [x] Document API endpoints
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M4.5 - Testing & bug fixes

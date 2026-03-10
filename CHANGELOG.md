@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* Added comprehensive documentation (M4.4)
+* Rewrote README.md with detailed installation, configuration, and usage guides
+* Added docs/API.md with complete REST and WebSocket API reference
+* Added docs/USER_GUIDE.md with end-user focused guide and examples
+* Added docs/ARCHITECTURE.md with technical architecture and design decisions
+* Documented all configuration options and environment variables
+* Added troubleshooting sections and FAQ
+* Added example conversations and code snippets
 * Added UI polish with smooth animations and transitions (M4.2)
 * Added `:active` states to all interactive buttons for tactile feedback
 * Added hover animations to session list, starter prompts, and buttons

@@ -36,7 +36,7 @@
 - [x] M4.1: Error handling - completed
 - [x] M4.2: UI polish - completed
 - [x] M4.3: Configuration file - completed
-- [ ] M4.4: Documentation
+- [x] M4.4: Documentation - completed
 - [ ] M4.5: Testing & bug fixes
 
 ## Notes

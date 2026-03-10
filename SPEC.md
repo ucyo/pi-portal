@@ -228,11 +228,11 @@ A web-based chat interface for the Pi coding agent, designed for R&D researchers
 ### M4 - Polish & Refinement
 
 #### M4.1 - Error handling
-- [ ] Handle WebSocket disconnection gracefully
-- [ ] Handle Pi subprocess crash and auto-restart
-- [ ] Handle session file parsing errors
-- [ ] Display user-friendly error messages in UI
-- [ ] Log errors server-side for debugging
+- [x] Handle WebSocket disconnection gracefully
+- [x] Handle Pi subprocess crash and auto-restart (already implemented)
+- [x] Handle session file parsing errors
+- [x] Display user-friendly error messages in UI
+- [x] Log errors server-side for debugging
 <!-- ⛔ STOP: Complete this sub-milestone, run tests, then wait for user review before continuing -->
 
 #### M4.2 - UI polish

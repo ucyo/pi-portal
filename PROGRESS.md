@@ -33,7 +33,7 @@
 
 ## Current: M4 - Polish & Refinement
 
-- [ ] M4.1: Error handling
+- [x] M4.1: Error handling - completed
 - [ ] M4.2: UI polish
 - [x] M4.3: Configuration file - completed
 - [ ] M4.4: Documentation

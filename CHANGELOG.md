@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* Added comprehensive error handling (M4.1)
+* Added error notification system with toast-style messages
+* Added frontend/error-handler.js for centralized error management
+* Improved error messages for session loading failures
+* Added specific error handling for FileNotFoundError and ValueError
+* Added reconnection success notifications
+* Added feedback submission error notifications
+* Improved logging for debugging
 * Removed Honcho and Procfile (unnecessary for single service)
 * Removed Pi from process management (backend manages Pi as subprocess)
 * Added configuration system using Pydantic BaseSettings

@@ -107,7 +107,12 @@ function connect() {
 function handleOpen() {
     console.log('WebSocket connected');
     state.connected = true;
+    
+    if (state.reconnectAttempts > 0) {
+        errorHandler.handleReconnectSuccess();
+    }
     state.reconnectAttempts = 0;
+    
     updateConnectionStatus('connected');
     updateInputState();
     startPingInterval();
@@ -132,6 +137,7 @@ function handleClose(event) {
 function handleError(error) {
     console.error('WebSocket error:', error);
     updateConnectionStatus('disconnected');
+    errorHandler.handleWebSocketError(error);
 }
 
 /**
@@ -223,7 +229,10 @@ function handleErrorMessage(data) {
     state.isProcessing = false;
     updateInputState();
     
-    // Show error in chat
+    // Show error notification
+    errorHandler.handlePiError(data.message);
+    
+    // Also show in chat
     appendSystemMessage(`Error: ${data.message}`);
 }
 
@@ -504,11 +513,13 @@ function addFeedbackButtons(messageElement, timestamp = null, feedback = null) {
 function sendFeedback(targetTimestamp, rating, comment = null) {
     if (!state.connected) {
         console.error('Cannot send feedback: not connected');
+        errorHandler.showNotification('Cannot submit feedback: Not connected to server', 'warning', 4000);
         return;
     }
     
     if (!targetTimestamp) {
         console.error('Cannot send feedback: no timestamp');
+        errorHandler.showNotification('Cannot submit feedback: Invalid message', 'error', 4000);
         return;
     }
     
@@ -1066,6 +1077,7 @@ async function loadSession(sessionId) {
         
         if (!response.ok) {
             console.error('Failed to load session:', response.status);
+            errorHandler.handleSessionError(sessionId);
             appendSystemMessage(`Failed to load session: ${response.statusText}`);
             return;
         }
@@ -1075,6 +1087,7 @@ async function loadSession(sessionId) {
         
     } catch (error) {
         console.error('Error loading session:', error);
+        errorHandler.handleSessionError(sessionId);
         appendSystemMessage(`Error loading session: ${error.message}`);
     }
 }

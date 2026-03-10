@@ -39,15 +39,15 @@
 - [x] M4.4: Documentation - completed
 - [x] M4.5: Testing & bug fixes - completed (automated: 132/132 passing, manual checklist created)
 
-## Next: M5 - Docker Compose Deployment
+## Current: M5 - Docker Compose Deployment
 
-- [ ] M5.1: Create Dockerfile for FastAPI backend
-- [ ] M5.2: Create Dockerfile for Pi service
-- [ ] M5.3: Create Docker Compose file
-- [ ] M5.4: Configure inter-service communication
-- [ ] M5.5: Volume mounts for Pi sessions
-- [ ] M5.6: Test full stack in Docker Compose
-- [ ] M5.7: Documentation for Docker deployment
+- [x] M5.1: Create Dockerfile for FastAPI backend - completed
+- [x] M5.2: Create Dockerfile for Pi service - completed (Pi included in backend container)
+- [x] M5.3: Create Docker Compose file - completed
+- [x] M5.4: Configure inter-service communication - completed (Pi subprocess in same container)
+- [x] M5.5: Volume mounts for Pi sessions - completed (Docker volume configured)
+- [ ] M5.6: Test full stack in Docker Compose - requires Docker environment
+- [x] M5.7: Documentation for Docker deployment - completed
 
 ## Notes
 - Architecture changed: No database, use Pi's JSONL sessions as single source of truth

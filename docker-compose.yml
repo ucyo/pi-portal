@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # FastAPI backend with Pi subprocess
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pi-portal:latest
+    container_name: pi-portal-backend
+    restart: unless-stopped
+    ports:
+      - "${PI_PORTAL_SERVER_PORT:-8000}:8000"
+    environment:
+      # Server configuration
+      PI_PORTAL_SERVER_HOST: 0.0.0.0
+      PI_PORTAL_SERVER_PORT: 8000
+      PI_PORTAL_SERVER_RELOAD: "false"
+      
+      # Pi configuration
+      PI_PORTAL_PI_EXECUTABLE: /usr/bin/pi
+      PI_PORTAL_PI_SESSION_DIR: /data/pi_sessions
+    volumes:
+      # Persistent session storage
+      - pi-sessions:/data/pi_sessions
+      
+      # Optional: Mount local config for starter prompts
+      - ./config/starter_prompts.json:/app/config/starter_prompts.json:ro
+    networks:
+      - pi-portal-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  pi-portal-network:
+    driver: bridge
+
+volumes:
+  # Persistent volume for Pi session files
+  pi-sessions:
+    driver: local

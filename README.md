@@ -49,6 +49,8 @@ Pi Portal provides a clean, modern web interface to chat with Pi while automatic
 
 ### Installation
 
+**Option 1: Local Installation (Recommended for Development)**
+
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/pi-portal.git
@@ -61,7 +63,23 @@ make install
 make start
 ```
 
+**Option 2: Docker (Recommended for Production)**
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/pi-portal.git
+cd pi-portal
+
+# Start with Docker Compose
+make docker-up
+
+# View logs
+make docker-logs
+```
+
 The web interface will be available at **http://localhost:8000**
+
+See [Docker Deployment Guide](docs/DOCKER.md) for detailed Docker instructions.
 
 ### First Run
 

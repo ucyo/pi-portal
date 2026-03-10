@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+* Added Docker Compose deployment support (M5)
+* Created Dockerfile with multi-stage build for smaller image size
+* Installed Pi agent in backend container (single-container architecture)
+* Created docker-compose.yml with persistent volume for session storage
+* Added health check to Docker container
+* Created non-root user for security (piportal:1000)
+* Added .dockerignore to optimize build context
+* Created docs/DOCKER.md with comprehensive deployment guide (11KB)
+* Updated README.md with Docker quick start instructions
+* Added Makefile targets for Docker operations (docker-build, docker-up, etc.)
+* Created .env.docker.example for Docker-specific configuration
+* Configured logging with json-file driver and rotation
+* Added backup/restore instructions for session data
+* Added troubleshooting section for common Docker issues
 * Added comprehensive testing and bug fixes (M4.5)
 * Created TESTING.md with 60+ manual test cases
 * Created TEST_RESULTS.md documenting all automated test results
